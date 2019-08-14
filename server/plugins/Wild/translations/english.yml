@@ -1,0 +1,15 @@
+reloaded_ok: §eConfiguration has been reloaded succ222222essfully.
+no_permission: §eYou have no permission to do that.
+wild_not_found: §eA safe location in the wild couldn't be found. Please try again.
+cooldown: §eYou are in a cooldown. You can do /wild again in <time_left>.
+timeunit:
+  second: second
+  seconds: seconds
+  minute: minute
+  minutes: minutes
+  hour: hour
+  hours: hours
+  day: day
+  days: days
+  now: now
+only_overworld: §eYou can only do /wild in the Overworld.

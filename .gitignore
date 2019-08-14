@@ -1,0 +1,14 @@
+server/cache
+server/logs
+server/crash-reports
+server/world
+server/world_nether
+server/world_the_end
+eula.txt
+server.properties
+target
+.idea
+.settings
+racing.iml
+server/usercache.json
+server/plugins/wild*.jar

@@ -1,0 +1,13 @@
+api-version: 1.13
+main: com.github.hornta.wild.Wild
+name: Wild
+version: ${project.version}
+author: hornta
+softdepend:  [WorldBorder]
+commands:
+  wild:
+permissions:
+  wild.wild:
+    default: true
+  wild.reload:
+    default: op
