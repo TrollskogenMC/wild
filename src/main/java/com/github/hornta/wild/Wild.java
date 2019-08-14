@@ -10,6 +10,7 @@ import com.github.hornta.wild.message.MessageManager;
 import com.github.hornta.wild.message.Translation;
 import com.github.hornta.wild.message.Translations;
 import com.wimbli.WorldBorder.WorldBorder;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -24,6 +25,7 @@ public class Wild extends JavaPlugin {
   private Carbon carbon;
   private Configuration configuration;
   private Translations translations;
+  private Metrics metrics;
 
   public static Wild getInstance() {
     return instance;
@@ -33,6 +35,8 @@ public class Wild extends JavaPlugin {
     if (instance == null) {
       instance = this;
     }
+
+    metrics = new Metrics(this);
 
     worldBorder = (WorldBorder) Bukkit.getPluginManager().getPlugin("WorldBorder");
 
