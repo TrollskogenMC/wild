@@ -9,5 +9,11 @@ commands:
 permissions:
   wild.wild:
     default: true
+  wild.player:
+    default: op
+  wild.world:
+    default: op
+  wild.bypasscooldown:
+    default: false
   wild.reload:
     default: op

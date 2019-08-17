@@ -10,7 +10,7 @@ import java.util.logging.Level;
 public class Configuration {
   private JavaPlugin plugin;
   private org.bukkit.configuration.Configuration configuration;
-  private Map<Enum, ConfigValue> keys = new HashMap<>();
+  private Map<Enum, ConfigValue> keys = new LinkedHashMap<>();
 
   public Configuration(JavaPlugin plugin) {
     this.plugin = plugin;

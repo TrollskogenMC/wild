@@ -1,7 +1,18 @@
-reloaded_ok: §eConfiguration has been reloaded succ222222essfully.
+reloaded_ok: §eConfiguration has been reloaded successfully.
 no_permission: §eYou have no permission to do that.
 wild_not_found: §eA safe location in the wild couldn't be found. Please try again.
-cooldown: §eYou are in a cooldown. You can do /wild again in <time_left>.
+cooldown: §eYou have <time_left> left until you can do /wild again.
+only_overworld: §eYou can only do /wild in the Overworld.
+missing_player: §eDid you forget to specify a player?
+player_not_found: §eA player with name `<player>` wasn't found. Are you sure you spelled
+  correctly?
+world_not_found: §eA world with name `<world>` wasn't found. Are you sure you spelled
+  correctly?
+missing_arguments: |-
+  §cSome arguments for this command is missing.
+
+  Usage:
+  <usage>
 timeunit:
   second: second
   seconds: seconds
@@ -12,4 +23,3 @@ timeunit:
   day: day
   days: days
   now: now
-only_overworld: §eYou can only do /wild in the Overworld.

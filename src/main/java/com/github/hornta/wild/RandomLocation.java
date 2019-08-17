@@ -30,6 +30,7 @@ public class RandomLocation {
 
   static {
     bannedMaterials = new HashSet<>();
+    bannedMaterials.add(Material.VOID_AIR);
     bannedMaterials.add(Material.WATER);
     bannedMaterials.add(Material.LAVA);
     bannedMaterials.add(Material.TRIPWIRE);
@@ -86,32 +87,38 @@ public class RandomLocation {
     findBelow.add(Material.STRIPPED_SPRUCE_WOOD);
   }
 
-  public RandomLocation(Player player) {
+  public RandomLocation(Player player, World world) {
     this.player = player;
-    this.world = player.getWorld();
+    this.world = world;
 
     if (Wild.getInstance().getWorldBorder() == null) {
-      this.border = null;
+      border = null;
     } else {
-      this.border = Config.getBorders().getOrDefault(world.getName(), null);
+      border = Config.getBorders().getOrDefault(world.getName(), null);
     }
 
-    if (this.border == null) {
-      this.centerX = world.getSpawnLocation().getBlockX();
-      this.centerZ = world.getSpawnLocation().getBlockZ();
-      this.radiusX = 5000;
-      this.radiusZ = 5000;
-      this.isRound = false;
-    } else {
-      this.centerX = (int) Math.floor(border.getX());
-      this.centerZ = (int) Math.floor(border.getZ());
-      this.radiusX = border.getRadiusX();
-      this.radiusZ = border.getRadiusZ();
+    if (border != null) {
+      centerX = (int) Math.floor(border.getX());
+      centerZ = (int) Math.floor(border.getZ());
+      radiusX = border.getRadiusX();
+      radiusZ = border.getRadiusZ();
       if(border.getShape() != null) {
-        this.isRound = border.getShape();
+        isRound = border.getShape();
       } else {
-        this.isRound = false;
+        isRound = false;
       }
+    } else if (Wild.getInstance().getConfiguration().get(ConfigKey.USE_VANILLA_WORLD_BORDER)) {
+      centerX = world.getWorldBorder().getCenter().getBlockX();
+      centerZ = world.getWorldBorder().getCenter().getBlockZ();
+      radiusX = (int) Math.ceil(world.getWorldBorder().getSize() / 2);
+      radiusZ = (int) Math.ceil(world.getWorldBorder().getSize() / 2);
+      isRound = false;
+    } else {
+      centerX = world.getSpawnLocation().getBlockX();
+      centerZ = world.getSpawnLocation().getBlockZ();
+      radiusX = Wild.getInstance().getConfiguration().get(ConfigKey.NO_BORDER_SIZE);
+      radiusZ = Wild.getInstance().getConfiguration().get(ConfigKey.NO_BORDER_SIZE);
+      isRound = false;
     }
   }
 
