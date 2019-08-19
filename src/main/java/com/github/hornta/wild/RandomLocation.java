@@ -133,11 +133,11 @@ public class RandomLocation {
         randX = r * Math.cos(a) + centerX;
         randZ = r * Math.sin(a) + centerZ;
       } else {
-        randX = randInt(
+        randX = Util.randInt(
           centerX - radiusX + 1,
           centerX + radiusX - 1
         );
-        randZ = randInt(
+        randZ = Util.randInt(
           centerZ - radiusZ + 1,
           centerZ + radiusZ - 1
         );
@@ -206,9 +206,5 @@ public class RandomLocation {
       !bannedMaterials.contains(block.getType()) &&
       !bannedMaterials.contains(block.getRelative(BlockFace.DOWN).getType())
     );
-  }
-
-  private int randInt(int min, int max) {
-    return random.nextInt(max - min + 1) + min;
   }
 }

@@ -1,6 +1,6 @@
 package com.github.hornta.wild;
 
-import com.github.hornta.*;
+import com.github.hornta.carbon.*;
 import com.github.hornta.wild.config.ConfigKey;
 import com.github.hornta.wild.config.ConfigType;
 import com.github.hornta.wild.config.Configuration;
@@ -9,17 +9,17 @@ import com.github.hornta.wild.message.MessageManager;
 import com.github.hornta.wild.message.Translation;
 import com.github.hornta.wild.message.Translations;
 import com.wimbli.WorldBorder.WorldBorder;
+import net.milkbowl.vault.economy.Economy;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
 
 public class Wild extends JavaPlugin {
   private static Wild instance;
@@ -27,6 +27,7 @@ public class Wild extends JavaPlugin {
   private Carbon carbon;
   private Configuration configuration;
   private Translations translations;
+  private Economy economy;
   private Metrics metrics;
 
   public static Wild getInstance() {
@@ -40,6 +41,12 @@ public class Wild extends JavaPlugin {
 
     metrics = new Metrics(this);
 
+    if (Bukkit.getPluginManager().isPluginEnabled("Vault")) {
+      RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+      if (rsp != null) {
+        economy = rsp.getProvider();
+      }
+    }
     worldBorder = (WorldBorder) Bukkit.getPluginManager().getPlugin("WorldBorder");
 
     configuration = new Configuration(this);
@@ -49,6 +56,13 @@ public class Wild extends JavaPlugin {
     configuration.add(ConfigKey.NO_BORDER_SIZE, "no_border_size", ConfigType.INTEGER, 5000);
     configuration.add(ConfigKey.USE_VANILLA_WORLD_BORDER, "use_vanilla_world_border", ConfigType.BOOLEAN, false);
     configuration.add(ConfigKey.IMMORTAL_DURATION_AFTER_TELEPORT, "immortal_duration_after_teleport", ConfigType.INTEGER, 5000);
+    configuration.add(ConfigKey.CHARGE_ENABLED, "charge.enabled", ConfigType.BOOLEAN, false);
+    configuration.add(ConfigKey.CHARGE_AMOUNT, "charge.amount", ConfigType.DOUBLE, 10);
+    configuration.add(ConfigKey.DISABLED_WORLDS, "disabled_worlds", ConfigType.LIST, Collections.emptyList());
+    configuration.add(ConfigKey.WILD_ON_FIRST_JOIN_ENABLED, "wild_on_first_join.enabled", ConfigType.BOOLEAN, false);
+    configuration.add(ConfigKey.WILD_ON_FIRST_JOIN_WORLD, "wild_on_first_join.world", ConfigType.STRING, "@same");
+    configuration.add(ConfigKey.WILD_ON_DEATH_ENABLED, "wild_on_death.enabled", ConfigType.BOOLEAN, false);
+    configuration.add(ConfigKey.WILD_ON_DEATH_WORLD, "wild_on_death.world", ConfigType.STRING, "@same");
     configuration.reload();
 
     translations = new Translations(this);
@@ -138,5 +152,9 @@ public class Wild extends JavaPlugin {
 
   public Translations getTranslations() {
     return translations;
+  }
+
+  public Economy getEconomy() {
+    return economy;
   }
 }

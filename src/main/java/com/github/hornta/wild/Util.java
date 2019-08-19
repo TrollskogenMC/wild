@@ -4,16 +4,16 @@ import com.github.hornta.wild.message.MessageKey;
 import com.github.hornta.wild.message.MessageManager;
 
 import java.io.File;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Util {
   private static final int SECONDS_IN_ONE_DAY = 86400;
   private static final int SECONDS_IN_ONE_HOUR = 3600;
   private static final int SECONDS_IN_ONE_MINUTE = 60;
   private static final int MAX_DURATION_UNITS = 2;
+  private static final Random random = new Random();
 
   public static String getFilenameWithoutExtension(File file) {
     String filename = file.getName();
@@ -84,5 +84,9 @@ public class Util {
     MessageManager.setValue("hours", MessageKey.TIME_UNIT_HOURS);
     MessageManager.setValue("day", MessageKey.TIME_UNIT_DAY);
     MessageManager.setValue("days", MessageKey.TIME_UNIT_DAYS);
+  }
+
+  public static int randInt(int min, int max) {
+    return random.nextInt(max - min + 1) + min;
   }
 }

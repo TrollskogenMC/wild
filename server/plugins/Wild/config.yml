@@ -2,5 +2,15 @@ language: english
 cooldown: 60
 tries: 10
 no_border_size: 5000
-use_vanilla_world_border: false
+use_vanilla_world_border: true
 immortal_duration_after_teleport: 5000
+charge:
+  enabled: false
+  amount: 10
+disabled_worlds: []
+wild_on_first_join:
+  enabled: true
+  world: '@random'
+wild_on_death:
+  enabled: true
+  world: '@random'

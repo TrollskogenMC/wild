@@ -1,15 +1,21 @@
 package com.github.hornta.wild.config;
 
 import com.github.hornta.wild.Wild;
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Level;
 
 public class Configuration {
   private JavaPlugin plugin;
-  private org.bukkit.configuration.Configuration configuration;
+  private YamlConfiguration configuration;
   private Map<Enum, ConfigValue> keys = new LinkedHashMap<>();
 
   public Configuration(JavaPlugin plugin) {
@@ -51,11 +57,26 @@ public class Configuration {
   }
 
   public boolean reload() {
-    plugin.reloadConfig();
-    configuration = plugin.getConfig();
+    File file = new File(plugin.getDataFolder(), "config.yml");
+    if (file.exists()) {
+      YamlConfiguration config = new YamlConfiguration();
+      try {
+        config.load(file);
+      } catch (Exception ex) {
+        plugin.getLogger().log(Level.SEVERE, ex.getMessage(), ex);
+        return false;
+      }
+      configuration = config;
+    } else {
+      configuration = new YamlConfiguration();
+    }
     boolean result = validate();
     deleteUnusedValues();
-    plugin.saveConfig();
+    try {
+      configuration.save(file);
+    } catch (IOException ex) {
+      plugin.getLogger().log(Level.SEVERE, ex.getMessage(), ex);
+    }
     return result;
   }
 
@@ -64,9 +85,16 @@ public class Configuration {
       throw new Error("Cannot find ConfigValue for key `" + key.name() + "`");
     }
     ConfigValue value = keys.get(key);
-    Object obj = configuration.get(value.getPath());
+    Object obj;
+    switch (value.getType()) {
+      case DOUBLE:
+        obj = configuration.getDouble(value.getPath());
+        break;
+      default:
+        obj = configuration.get(value.getPath());
+    }
     Function<String, Object> converter = value.getConverter();
-    if(converter != null) {
+    if (converter != null) {
       return (T)converter.apply(((String)obj).toUpperCase(Locale.ENGLISH));
     }
     return (T)obj;

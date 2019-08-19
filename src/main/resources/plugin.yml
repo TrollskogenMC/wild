@@ -3,7 +3,7 @@ main: com.github.hornta.wild.Wild
 name: Wild
 version: ${project.version}
 author: hornta
-softdepend:  [WorldBorder]
+softdepend:  [WorldBorder, Vault]
 commands:
   wild:
 permissions:
@@ -14,6 +14,8 @@ permissions:
   wild.world:
     default: op
   wild.bypasscooldown:
+    default: false
+  wild.bypasscharge:
     default: false
   wild.reload:
     default: op

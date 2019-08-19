@@ -5,14 +5,18 @@ import java.util.Set;
 
 public enum MessageKey {
   CONFIGURATION_RELOADED("reloaded_ok"),
+  CONFIGURATION_RELOAD_FAILED("reloaded_fail"),
   WILD_NOT_FOUND("wild_not_found"),
   COOLDOWN("cooldown"),
+  CHARGE("charge"),
+  CHARGE_SUCCESS("charge_success"),
   NO_PERMISSION("no_permission"),
   ONLY_OVERWORLD("only_overworld"),
   FORGET_PLAYER("forget_player"),
   WORLD_NOT_FOUND("world_not_found"),
   PLAYER_NOT_FOUND("player_not_found"),
   MISSING_ARGUMENTS("missing_arguments"),
+  WORLD_DISABLED("world_disabled"),
   TIME_UNIT_SECOND("timeunit.second"),
   TIME_UNIT_SECONDS("timeunit.seconds"),
   TIME_UNIT_MINUTE("timeunit.minute"),

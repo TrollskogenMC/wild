@@ -45,9 +45,6 @@ public class ConfigValue {
       case COLOR:
         isExpectedType = configurationSection.isColor(path);
         break;
-      case DOUBLE:
-        isExpectedType = configurationSection.isDouble(path);
-        break;
       case STRING:
         isExpectedType = configurationSection.isString(path);
         break;
@@ -66,6 +63,8 @@ public class ConfigValue {
       case OFFLINE_PLAYER:
         isExpectedType = configurationSection.isOfflinePlayer(path);
         break;
+      case DOUBLE:
+        isExpectedType = configurationSection.isDouble(path) || configurationSection.isInt(path);
       default:
     }
 
