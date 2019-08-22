@@ -17,6 +17,7 @@ public enum MessageKey {
   PLAYER_NOT_FOUND("player_not_found"),
   MISSING_ARGUMENTS("missing_arguments"),
   WORLD_DISABLED("world_disabled"),
+  SEARCHING_ACTION_BAR("searching"),
   TIME_UNIT_SECOND("timeunit.second"),
   TIME_UNIT_SECONDS("timeunit.seconds"),
   TIME_UNIT_MINUTE("timeunit.minute"),

@@ -3,12 +3,15 @@ package com.github.hornta.wild;
 import com.github.hornta.wild.config.ConfigKey;
 import com.wimbli.WorldBorder.BorderData;
 import com.wimbli.WorldBorder.Config;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Consumer;
 import org.bukkit.util.Vector;
 
 import java.util.HashSet;
@@ -18,6 +21,7 @@ import java.util.Set;
 public class RandomLocation {
   private final Player player;
   private final World world;
+  private final double payAmount;
   private final BorderData border;
   private final boolean isRound;
   private final int centerX;
@@ -87,9 +91,10 @@ public class RandomLocation {
     findBelow.add(Material.STRIPPED_SPRUCE_WOOD);
   }
 
-  public RandomLocation(Player player, World world) {
+  public RandomLocation(Player player, World world, double payAmount) {
     this.player = player;
     this.world = world;
+    this.payAmount = payAmount;
 
     if (Wild.getInstance().getWorldBorder() == null) {
       border = null;
@@ -122,53 +127,13 @@ public class RandomLocation {
     }
   }
 
-  public Location findLocation() {
-    double randX;
-    double randZ;
-    for (int i = 0; i < (int)Wild.getInstance().getConfiguration().get(ConfigKey.TRIES); ++i) {
-      Location loc;
-      if (isRound) {
-        double a = random.nextDouble() * 2 * Math.PI;
-        double r = Math.min(radiusX, radiusZ) * Math.sqrt(random.nextDouble());
-        randX = r * Math.cos(a) + centerX;
-        randZ = r * Math.sin(a) + centerZ;
-      } else {
-        randX = Util.randInt(
-          centerX - radiusX + 1,
-          centerX + radiusX - 1
-        );
-        randZ = Util.randInt(
-          centerZ - radiusZ + 1,
-          centerZ + radiusZ - 1
-        );
-      }
+  public double getPayAmount() {
+    return payAmount;
+  }
 
-      loc = new Location(
-        world,
-        (int) randX,
-        world.getHighestBlockYAt((int) randX, (int) randZ),
-        (int) randZ
-      ).add(new Vector(0.5, 0, 0.5));
-
-      if (border != null && !border.insideBorder(loc)) {
-        continue;
-      }
-
-      if (
-        player.getLocation().getBlockX() == loc.getBlockX() &&
-        player.getLocation().getBlockZ() == loc.getBlockZ()
-      ) {
-        continue;
-      }
-
-      if (!safeStandBlock(loc.getBlock())) {
-        continue;
-      }
-
-      return findSpaceBelow(loc);
-    }
-
-    return null;
+  public void findLocation(Consumer<Location> callback) {
+    Task task = new Task(Wild.getInstance().getConfiguration().get(ConfigKey.TRIES), callback);
+    task.runTaskTimer(Wild.getInstance(), 0, 2L);
   }
 
   private Location findSpaceBelow(Location location) {
@@ -206,5 +171,70 @@ public class RandomLocation {
       !bannedMaterials.contains(block.getType()) &&
       !bannedMaterials.contains(block.getRelative(BlockFace.DOWN).getType())
     );
+  }
+
+  private class Task extends BukkitRunnable {
+    private int maxIterations;
+    private int currentIteration = 0;
+    private Consumer<Location> callback;
+
+    Task(int maxIterations, Consumer<Location> callback) {
+      this.maxIterations = maxIterations;
+      this.callback = callback;
+    }
+
+    @Override
+    public void run() {
+      currentIteration += 1;
+      if (currentIteration == maxIterations) {
+        this.cancel();
+        callback.accept(null);
+      }
+
+      double randX;
+      double randZ;
+
+      Location loc;
+      if (isRound) {
+        double a = random.nextDouble() * 2 * Math.PI;
+        double r = Math.min(radiusX, radiusZ) * Math.sqrt(random.nextDouble());
+        randX = r * Math.cos(a) + centerX;
+        randZ = r * Math.sin(a) + centerZ;
+      } else {
+        randX = Util.randInt(
+          centerX - radiusX + 1,
+          centerX + radiusX - 1
+        );
+        randZ = Util.randInt(
+          centerZ - radiusZ + 1,
+          centerZ + radiusZ - 1
+        );
+      }
+
+      loc = new Location(
+        world,
+        (int) randX,
+        world.getHighestBlockYAt((int) randX, (int) randZ),
+        (int) randZ
+      ).add(new Vector(0.5, 0, 0.5));
+
+      if (border != null && !border.insideBorder(loc)) {
+        return;
+      }
+
+      if (
+        player.getLocation().getBlockX() == loc.getBlockX() &&
+          player.getLocation().getBlockZ() == loc.getBlockZ()
+      ) {
+        return;
+      }
+
+      if (!safeStandBlock(loc.getBlock())) {
+        return;
+      }
+
+      callback.accept(findSpaceBelow(loc));
+      this.cancel();
+    }
   }
 }

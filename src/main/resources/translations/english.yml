@@ -11,6 +11,7 @@ player_not_found: "§eA player with name `<player>` wasn't found. Are you sure y
 world_not_found: "§eA world with name `<world>` wasn't found. Are you sure you spelled correctly?"
 missing_arguments: "§cSome arguments for this command is missing.\n\nUsage:\n<usage>"
 world_disabled: "§e/wild is disabled in this world."
+searching: "§eSearching for a safe location..."
 timeunit.second: "second"
 timeunit.seconds: "seconds"
 timeunit.minute: "minute"

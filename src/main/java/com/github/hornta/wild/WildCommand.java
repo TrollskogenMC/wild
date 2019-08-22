@@ -4,6 +4,8 @@ import com.github.hornta.carbon.ICommandHandler;
 import com.github.hornta.wild.config.ConfigKey;
 import com.github.hornta.wild.message.MessageKey;
 import com.github.hornta.wild.message.MessageManager;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
@@ -32,7 +34,8 @@ public class WildCommand implements ICommandHandler, Listener {
     boolean checkCooldown;
     World world;
     double payAmount = 0;
-    Economy economy = null;
+    Economy economy;
+    boolean showActionBarMessage = false;
 
     if (args.length >= 1) {
       player = Bukkit.getPlayer(args[0]);
@@ -60,6 +63,7 @@ public class WildCommand implements ICommandHandler, Listener {
 
     if (args.length == 0 || (commandSender instanceof Player && player == commandSender)) {
       checkCooldown = true;
+      showActionBarMessage = true;
     } else {
       checkCooldown = false;
     }
@@ -98,27 +102,33 @@ public class WildCommand implements ICommandHandler, Listener {
       }
     }
 
-    RandomLocation randomLocation = new RandomLocation(player, world);
-    Location loc = randomLocation.findLocation();
-    if(loc != null) {
-      if (payAmount > 0) {
-        EconomyResponse response = economy.withdrawPlayer(player, payAmount);
-        if (response.type == EconomyResponse.ResponseType.SUCCESS) {
-          MessageManager.setValue("amount", economy.format(payAmount));
-          MessageManager.sendMessage(player, MessageKey.CHARGE_SUCCESS);
-        }
-      }
-
-      int immortal_duration = Wild.getInstance().getConfiguration().get(ConfigKey.IMMORTAL_DURATION_AFTER_TELEPORT);
-      if (immortal_duration > 0) {
-        immortals.put(player.getUniqueId(), System.currentTimeMillis() + immortal_duration);
-      }
-      player.teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND);
-      playerCooldowns.put(player.getUniqueId(), now + (int) Wild.getInstance().getConfiguration().get(ConfigKey.COOLDOWN) * 1000);
-      player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
-    } else {
-      MessageManager.sendMessage(commandSender, MessageKey.WILD_NOT_FOUND);
+    if (showActionBarMessage) {
+      player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(MessageManager.getMessage(MessageKey.SEARCHING_ACTION_BAR)));
     }
+
+    RandomLocation randomLocation = new RandomLocation(player, world, payAmount);
+    randomLocation.findLocation((Location loc) -> {
+      if(loc != null) {
+        if (randomLocation.getPayAmount() > 0) {
+          EconomyResponse response = Wild.getInstance().getEconomy().withdrawPlayer(player, randomLocation.getPayAmount());
+          if (response.type == EconomyResponse.ResponseType.SUCCESS) {
+            MessageManager.setValue("amount", Wild.getInstance().getEconomy().format(randomLocation.getPayAmount()));
+            MessageManager.sendMessage(player, MessageKey.CHARGE_SUCCESS);
+          }
+        }
+
+        int immortal_duration = Wild.getInstance().getConfiguration().get(ConfigKey.IMMORTAL_DURATION_AFTER_TELEPORT);
+        if (immortal_duration > 0) {
+          immortals.put(player.getUniqueId(), System.currentTimeMillis() + immortal_duration);
+        }
+        player.teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND);
+        playerCooldowns.put(player.getUniqueId(), now + (int) Wild.getInstance().getConfiguration().get(ConfigKey.COOLDOWN) * 1000);
+        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(""));
+      } else {
+        MessageManager.sendMessage(commandSender, MessageKey.WILD_NOT_FOUND);
+      }
+    });
   }
 
   @EventHandler
@@ -143,14 +153,15 @@ public class WildCommand implements ICommandHandler, Listener {
     if ((boolean)Wild.getInstance().getConfiguration().get(ConfigKey.WILD_ON_FIRST_JOIN_ENABLED) && !event.getPlayer().hasPlayedBefore()) {
       String worldTarget = Wild.getInstance().getConfiguration().get(ConfigKey.WILD_ON_FIRST_JOIN_WORLD);
       World world = getWorldFromTarget(worldTarget, event.getPlayer());
-      RandomLocation randomLocation = new RandomLocation(event.getPlayer(), world);
-      Location loc = randomLocation.findLocation();
-      if (loc != null) {
-        Bukkit.getScheduler().runTaskLater(Wild.getInstance(), () -> {
-          event.getPlayer().teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND);
-          event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
-        }, 1);
-      }
+      RandomLocation randomLocation = new RandomLocation(event.getPlayer(), world, 0);
+      randomLocation.findLocation((Location loc) -> {
+        if (loc != null) {
+          Bukkit.getScheduler().runTaskLater(Wild.getInstance(), () -> {
+            event.getPlayer().teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND);
+            event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
+          }, 1);
+        }
+      });
     }
   }
 
@@ -159,13 +170,14 @@ public class WildCommand implements ICommandHandler, Listener {
     if (Wild.getInstance().getConfiguration().get(ConfigKey.WILD_ON_DEATH_ENABLED)) {
       String worldTarget = Wild.getInstance().getConfiguration().get(ConfigKey.WILD_ON_DEATH_WORLD);
       World world = getWorldFromTarget(worldTarget, event.getPlayer());
-      RandomLocation randomLocation = new RandomLocation(event.getPlayer(), world);
-      Location loc = randomLocation.findLocation();
-      if (loc != null) {
-        event.setRespawnLocation(loc);
-        event.getPlayer().teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND);
-        event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
-      }
+      RandomLocation randomLocation = new RandomLocation(event.getPlayer(), world, 0);
+      randomLocation.findLocation((Location loc) -> {
+        if (loc != null) {
+          event.setRespawnLocation(loc);
+          event.getPlayer().teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND);
+          event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
+        }
+      });
     }
   }
 
