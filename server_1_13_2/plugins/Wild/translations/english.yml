@@ -1,0 +1,31 @@
+reloaded_ok: §eConfiguration has been reloaded successfully.
+reloaded_fail: §eSomething went wrong when trying to reload the configuration. Check
+  your config.yml for syntax errors.
+no_permission: §eYou have no permission to do that.
+wild_not_found: §eA safe location in the wild couldn't be found. Please try again.
+cooldown: §eYou have <time_left> left until you can use /wild again.
+charge: §eYou cannot afford to use /wild right now. You need <required> but have <current>.
+charge_success: §eYou paid <amount> to use /wild.
+only_overworld: §eYou can only use /wild in the Overworld.
+missing_player: §eDid you forget to specify a player?
+player_not_found: §eA player with name `<player>` wasn't found. Are you sure you spelled
+  correctly?
+world_not_found: §eA world with name `<world>` wasn't found. Are you sure you spelled
+  correctly?
+missing_arguments: |-
+  §cSome arguments for this command is missing.
+
+  Usage:
+  <usage>
+world_disabled: §e/wild is disabled in this world.
+searching: §eSearching for a safe location...
+timeunit:
+  second: second
+  seconds: seconds
+  minute: minute
+  minutes: minutes
+  hour: hour
+  hours: hours
+  day: day
+  days: days
+  now: now

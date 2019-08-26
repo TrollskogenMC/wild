@@ -14,6 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Consumer;
 import org.bukkit.util.Vector;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -34,61 +35,77 @@ public class RandomLocation {
 
   static {
     bannedMaterials = new HashSet<>();
-    bannedMaterials.add(Material.VOID_AIR);
-    bannedMaterials.add(Material.WATER);
-    bannedMaterials.add(Material.LAVA);
-    bannedMaterials.add(Material.TRIPWIRE);
-    bannedMaterials.add(Material.FIRE);
-    bannedMaterials.add(Material.CACTUS);
-    bannedMaterials.add(Material.SWEET_BERRY_BUSH);
-    bannedMaterials.add(Material.CAMPFIRE);
-    bannedMaterials.add(Material.COBWEB);
-    bannedMaterials.add(Material.MAGMA_BLOCK);
-    bannedMaterials.add(Material.ACACIA_PRESSURE_PLATE);
-    bannedMaterials.add(Material.BIRCH_PRESSURE_PLATE);
-    bannedMaterials.add(Material.JUNGLE_PRESSURE_PLATE);
-    bannedMaterials.add(Material.OAK_PRESSURE_PLATE);
-    bannedMaterials.add(Material.SPRUCE_PRESSURE_PLATE);
-    bannedMaterials.add(Material.DARK_OAK_PRESSURE_PLATE);
-    bannedMaterials.add(Material.STONE_PRESSURE_PLATE);
-    bannedMaterials.add(Material.HEAVY_WEIGHTED_PRESSURE_PLATE);
-    bannedMaterials.add(Material.LIGHT_WEIGHTED_PRESSURE_PLATE);
+    for(String material : new String[] {
+      "VOID_AIR",
+      "WATER",
+      "LAVA",
+      "TRIPWIRE",
+      "FIRE",
+      "CACTUS",
+      "SWEET_BERRY_BUSH",
+      "CAMPFIRE",
+      "COBWEB",
+      "MAGMA_BLOCK",
+      "ACACIA_PRESSURE_PLATE",
+      "BIRCH_PRESSURE_PLATE",
+      "JUNGLE_PRESSURE_PLATE",
+      "OAK_PRESSURE_PLATE",
+      "SPRUCE_PRESSURE_PLATE",
+      "DARK_OAK_PRESSURE_PLATE",
+      "STONE_PRESSURE_PLATE",
+      "HEAVY_WEIGHTED_PRESSURE_PLATE",
+      "LIGHT_WEIGHTED_PRESSURE_PLATE"
+    }) {
+      try {
+        bannedMaterials.add(Material.valueOf(material));
+      } catch (IllegalArgumentException e) {
+        //
+      }
+    }
 
     findBelow = new HashSet<>();
-    findBelow.add(Material.ACACIA_LEAVES);
-    findBelow.add(Material.BIRCH_LEAVES);
-    findBelow.add(Material.DARK_OAK_LEAVES);
-    findBelow.add(Material.JUNGLE_LEAVES);
-    findBelow.add(Material.OAK_LEAVES);
-    findBelow.add(Material.SPRUCE_LEAVES);
+    for(String material : new String[]{
+      "ACACIA_LEAVES",
+      "BIRCH_LEAVES",
+      "DARK_OAK_LEAVES",
+      "JUNGLE_LEAVES",
+      "OAK_LEAVES",
+      "SPRUCE_LEAVES",
 
-    findBelow.add(Material.ACACIA_LOG);
-    findBelow.add(Material.BIRCH_LOG);
-    findBelow.add(Material.DARK_OAK_LOG);
-    findBelow.add(Material.JUNGLE_LOG);
-    findBelow.add(Material.OAK_LOG);
-    findBelow.add(Material.SPRUCE_LOG);
+      "ACACIA_LOG",
+      "BIRCH_LOG",
+      "DARK_OAK_LOG",
+      "JUNGLE_LOG",
+      "OAK_LOG",
+      "SPRUCE_LOG",
 
-    findBelow.add(Material.ACACIA_WOOD);
-    findBelow.add(Material.BIRCH_WOOD);
-    findBelow.add(Material.DARK_OAK_WOOD);
-    findBelow.add(Material.JUNGLE_WOOD);
-    findBelow.add(Material.OAK_WOOD);
-    findBelow.add(Material.SPRUCE_WOOD);
+      "ACACIA_WOOD",
+      "BIRCH_WOOD",
+      "DARK_OAK_WOOD",
+      "JUNGLE_WOOD",
+      "OAK_WOOD",
+      "SPRUCE_WOOD",
 
-    findBelow.add(Material.STRIPPED_ACACIA_LOG);
-    findBelow.add(Material.STRIPPED_BIRCH_LOG);
-    findBelow.add(Material.STRIPPED_DARK_OAK_LOG);
-    findBelow.add(Material.STRIPPED_JUNGLE_LOG);
-    findBelow.add(Material.STRIPPED_OAK_LOG);
-    findBelow.add(Material.STRIPPED_SPRUCE_LOG);
+      "STRIPPED_ACACIA_LOG",
+      "STRIPPED_BIRCH_LOG",
+      "STRIPPED_DARK_OAK_LOG",
+      "STRIPPED_JUNGLE_LOG",
+      "STRIPPED_OAK_LOG",
+      "STRIPPED_SPRUCE_LOG",
 
-    findBelow.add(Material.STRIPPED_ACACIA_WOOD);
-    findBelow.add(Material.STRIPPED_BIRCH_WOOD);
-    findBelow.add(Material.STRIPPED_DARK_OAK_WOOD);
-    findBelow.add(Material.STRIPPED_JUNGLE_WOOD);
-    findBelow.add(Material.STRIPPED_OAK_WOOD);
-    findBelow.add(Material.STRIPPED_SPRUCE_WOOD);
+      "STRIPPED_ACACIA_WOOD",
+      "STRIPPED_BIRCH_WOOD",
+      "STRIPPED_DARK_OAK_WOOD",
+      "STRIPPED_JUNGLE_WOOD",
+      "STRIPPED_OAK_WOOD",
+      "STRIPPED_SPRUCE_WOOD"
+    }) {
+      try {
+        findBelow.add(Material.valueOf(material));
+      } catch (IllegalArgumentException e) {
+        //
+      }
+    }
   }
 
   public RandomLocation(Player player, World world, double payAmount) {

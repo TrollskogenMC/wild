@@ -28,3 +28,4 @@ charge_success: §eYou paid <amount> to do /wild.
 world_disabled: §e/wild is disabled in this world.
 reloaded_fail: §eSomething went wrong when trying to reload the configuration. Check
   your config.yml for syntax errors.
+searching: §eSearching for a safe location...

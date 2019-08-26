@@ -6,7 +6,7 @@
 
     <groupId>com.github.hornta</groupId>
     <artifactId>wild</artifactId>
-    <version>0.7.0</version>
+    <version>0.9.0</version>
 
     <properties>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -80,6 +80,15 @@
                             <type>jar</type>
                             <overWrite>yes</overWrite>
                             <outputDirectory>${project.basedir}/server/plugins</outputDirectory>
+                            <destFileName>${project.artifactId}-${project.version}.jar</destFileName>
+                        </artifactItem>
+                        <artifactItem>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>${project.artifactId}</artifactId>
+                            <version>${project.version}</version>
+                            <type>jar</type>
+                            <overWrite>yes</overWrite>
+                            <outputDirectory>${project.basedir}/server_1_13_2/plugins</outputDirectory>
                             <destFileName>${project.artifactId}-${project.version}.jar</destFileName>
                         </artifactItem>
                     </artifactItems>

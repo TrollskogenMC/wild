@@ -26,6 +26,7 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class WildCommand implements ICommandHandler, Listener {
+  private HashMap<UUID, RandomLocation> tasks = new HashMap<>();
   private HashMap<UUID, Long> playerCooldowns = new HashMap<>();
   private HashMap<UUID, Long> immortals = new HashMap<>();
 
@@ -41,14 +42,20 @@ public class WildCommand implements ICommandHandler, Listener {
       player = Bukkit.getPlayer(args[0]);
     } else {
       player = (Player) commandSender;
+    }
 
+    if (tasks.containsKey(player.getUniqueId())) {
+      return;
+    }
+
+    if (numTypedArgs == 0 || (commandSender instanceof Player && player == commandSender)) {
       double amount = Wild.getInstance().getConfiguration().get(ConfigKey.CHARGE_AMOUNT);
       economy = Wild.getInstance().getEconomy();
       if (
         !player.hasPermission("wild.bypasscharge") &&
-        economy != null &&
-        (boolean)Wild.getInstance().getConfiguration().get(ConfigKey.CHARGE_ENABLED) &&
-        amount != 0.0
+          economy != null &&
+          (boolean)Wild.getInstance().getConfiguration().get(ConfigKey.CHARGE_ENABLED) &&
+          amount != 0.0
       ) {
         if (economy.getBalance(player) < amount) {
           MessageManager.setValue("required", economy.format(amount));
@@ -109,6 +116,7 @@ public class WildCommand implements ICommandHandler, Listener {
     }
 
     RandomLocation randomLocation = new RandomLocation(player, world, payAmount);
+    tasks.put(player.getUniqueId(), randomLocation);
     randomLocation.findLocation((Location loc) -> {
       if(loc != null) {
         if (randomLocation.getPayAmount() > 0) {
@@ -130,6 +138,8 @@ public class WildCommand implements ICommandHandler, Listener {
       } else {
         MessageManager.sendMessage(commandSender, MessageKey.WILD_NOT_FOUND);
       }
+
+      tasks.remove(player.getUniqueId());
     });
   }
 
