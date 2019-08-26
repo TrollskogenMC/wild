@@ -8,7 +8,7 @@ import com.github.hornta.wild.message.Translation;
 import org.bukkit.command.CommandSender;
 
 public class WildReload implements ICommandHandler {
-  public void handle(CommandSender commandSender, String[] strings) {
+  public void handle(CommandSender commandSender, String[] strings, int typedArgs) {
     if (!Wild.getInstance().getConfiguration().reload()) {
       MessageManager.sendMessage(commandSender, MessageKey.CONFIGURATION_RELOAD_FAILED);
       return;

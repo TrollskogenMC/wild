@@ -29,7 +29,7 @@ public class WildCommand implements ICommandHandler, Listener {
   private HashMap<UUID, Long> playerCooldowns = new HashMap<>();
   private HashMap<UUID, Long> immortals = new HashMap<>();
 
-  public void handle(CommandSender commandSender, String[] args) {
+  public void handle(CommandSender commandSender, String[] args, int numTypedArgs) {
     Player player;
     boolean checkCooldown;
     World world;
@@ -68,14 +68,16 @@ public class WildCommand implements ICommandHandler, Listener {
       checkCooldown = false;
     }
 
-    if (payAmount > 0) {
-      checkCooldown = false;
+    if (numTypedArgs == 0) {
+      world = getWorldFromTarget(Wild.getInstance().getConfiguration().get(ConfigKey.WILD_DEFAULT_WORLD), player);
+    } else if (numTypedArgs == 1) {
+      world = player.getWorld();
+    } else {
+      world = Bukkit.getWorld(args[1]);
     }
 
-    if (args.length == 2) {
-      world = Bukkit.getWorld(args[1]);
-    } else {
-      world = player.getWorld();
+    if (payAmount > 0) {
+      checkCooldown = false;
     }
 
     if (world.getEnvironment() != World.Environment.NORMAL) {
@@ -188,7 +190,10 @@ public class WildCommand implements ICommandHandler, Listener {
         world = player.getWorld();
         break;
       case "@random":
-        List<World> worlds = Bukkit.getWorlds().stream().filter((World w) -> w.getEnvironment() == World.Environment.NORMAL).collect(Collectors.toList());
+        List<String> disabledWorlds = Wild.getInstance().getConfiguration().get(ConfigKey.DISABLED_WORLDS);
+        List<World> worlds = Bukkit.getWorlds().stream().filter((World w) -> {
+          return w.getEnvironment() == World.Environment.NORMAL && !disabledWorlds.contains(w.getName());
+        }).collect(Collectors.toList());
         if(worlds.isEmpty()) {
           world = player.getWorld();
         } else {

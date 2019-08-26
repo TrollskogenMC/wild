@@ -63,6 +63,7 @@ public class Wild extends JavaPlugin {
     configuration.add(ConfigKey.WILD_ON_FIRST_JOIN_WORLD, "wild_on_first_join.world", ConfigType.STRING, "@same");
     configuration.add(ConfigKey.WILD_ON_DEATH_ENABLED, "wild_on_death.enabled", ConfigType.BOOLEAN, false);
     configuration.add(ConfigKey.WILD_ON_DEATH_WORLD, "wild_on_death.world", ConfigType.STRING, "@same");
+    configuration.add(ConfigKey.WILD_DEFAULT_WORLD, "default_world", ConfigType.STRING, "@same");
     configuration.reload();
 
     translations = new Translations(this);

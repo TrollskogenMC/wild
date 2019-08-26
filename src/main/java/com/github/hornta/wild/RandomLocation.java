@@ -222,6 +222,10 @@ public class RandomLocation {
         return;
       }
 
+      if (!world.getWorldBorder().isInside(loc)) {
+        return;
+      }
+
       if (
         player.getLocation().getBlockX() == loc.getBlockX() &&
           player.getLocation().getBlockZ() == loc.getBlockZ()
