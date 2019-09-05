@@ -56,6 +56,15 @@ public class WildCommand implements ICommandHandler, Listener {
       return;
     }
 
+    if(preEvent.getOverrideLocation() != null) {
+      player.teleport(preEvent.getOverrideLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
+      player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
+      player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(""));
+
+      TeleportEvent teleportEvent = new TeleportEvent(preEvent.getOverrideLocation(), TeleportCause.COMMAND, player);
+      Bukkit.getPluginManager().callEvent(teleportEvent);
+    }
+
     if (numTypedArgs == 0 || (commandSender instanceof Player && player == commandSender)) {
       double amount = Wild.getInstance().getConfiguration().get(ConfigKey.CHARGE_AMOUNT);
       economy = Wild.getInstance().getEconomy();
@@ -180,6 +189,17 @@ public class WildCommand implements ICommandHandler, Listener {
         return;
       }
 
+      if(preEvent.getOverrideLocation() != null) {
+        Bukkit.getScheduler().runTaskLater(Wild.getInstance(), () -> {
+          event.getPlayer().teleport(preEvent.getOverrideLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
+          event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
+
+          TeleportEvent teleportEvent = new TeleportEvent(preEvent.getOverrideLocation(), TeleportCause.FIRST_JOIN, event.getPlayer());
+          Bukkit.getPluginManager().callEvent(teleportEvent);
+        }, 1);
+        return;
+      }
+
       String worldTarget = Wild.getInstance().getConfiguration().get(ConfigKey.WILD_ON_FIRST_JOIN_WORLD);
       World world = getWorldFromTarget(worldTarget, event.getPlayer());
       RandomLocation randomLocation = new RandomLocation(event.getPlayer(), world, 0);
@@ -203,6 +223,14 @@ public class WildCommand implements ICommandHandler, Listener {
       PreTeleportEvent preEvent = new PreTeleportEvent(TeleportCause.RESPAWN, event.getPlayer());
       Bukkit.getPluginManager().callEvent(preEvent);
       if(preEvent.isCancelled()) {
+        return;
+      }
+
+      if(preEvent.getOverrideLocation() != null) {
+        event.setRespawnLocation(preEvent.getOverrideLocation());
+        event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
+        TeleportEvent teleportEvent = new TeleportEvent(preEvent.getOverrideLocation(), TeleportCause.RESPAWN, event.getPlayer());
+        Bukkit.getPluginManager().callEvent(teleportEvent);
         return;
       }
 
