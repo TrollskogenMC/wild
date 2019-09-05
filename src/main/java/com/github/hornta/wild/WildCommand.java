@@ -2,6 +2,8 @@ package com.github.hornta.wild;
 
 import com.github.hornta.carbon.ICommandHandler;
 import com.github.hornta.wild.config.ConfigKey;
+import com.github.hornta.wild.events.TeleportEvent;
+import com.github.hornta.wild.events.PreTeleportEvent;
 import com.github.hornta.wild.message.MessageKey;
 import com.github.hornta.wild.message.MessageManager;
 import net.md_5.bungee.api.ChatMessageType;
@@ -45,6 +47,12 @@ public class WildCommand implements ICommandHandler, Listener {
     }
 
     if (tasks.containsKey(player.getUniqueId())) {
+      return;
+    }
+
+    PreTeleportEvent preEvent = new PreTeleportEvent(TeleportCause.COMMAND, player);
+    Bukkit.getPluginManager().callEvent(preEvent);
+    if(preEvent.isCancelled()) {
       return;
     }
 
@@ -135,6 +143,9 @@ public class WildCommand implements ICommandHandler, Listener {
         playerCooldowns.put(player.getUniqueId(), now + (int) Wild.getInstance().getConfiguration().get(ConfigKey.COOLDOWN) * 1000);
         player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(""));
+
+        TeleportEvent teleportEvent = new TeleportEvent(loc, TeleportCause.COMMAND, player);
+        Bukkit.getPluginManager().callEvent(teleportEvent);
       } else {
         MessageManager.sendMessage(commandSender, MessageKey.WILD_NOT_FOUND);
       }
@@ -163,6 +174,12 @@ public class WildCommand implements ICommandHandler, Listener {
   @EventHandler
   void onPlayerJoin(PlayerJoinEvent event) {
     if ((boolean)Wild.getInstance().getConfiguration().get(ConfigKey.WILD_ON_FIRST_JOIN_ENABLED) && !event.getPlayer().hasPlayedBefore()) {
+      PreTeleportEvent preEvent = new PreTeleportEvent(TeleportCause.FIRST_JOIN, event.getPlayer());
+      Bukkit.getPluginManager().callEvent(preEvent);
+      if(preEvent.isCancelled()) {
+        return;
+      }
+
       String worldTarget = Wild.getInstance().getConfiguration().get(ConfigKey.WILD_ON_FIRST_JOIN_WORLD);
       World world = getWorldFromTarget(worldTarget, event.getPlayer());
       RandomLocation randomLocation = new RandomLocation(event.getPlayer(), world, 0);
@@ -171,6 +188,9 @@ public class WildCommand implements ICommandHandler, Listener {
           Bukkit.getScheduler().runTaskLater(Wild.getInstance(), () -> {
             event.getPlayer().teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND);
             event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
+
+            TeleportEvent teleportEvent = new TeleportEvent(loc, TeleportCause.FIRST_JOIN, event.getPlayer());
+            Bukkit.getPluginManager().callEvent(teleportEvent);
           }, 1);
         }
       });
@@ -180,14 +200,21 @@ public class WildCommand implements ICommandHandler, Listener {
   @EventHandler
   void onPlayerRespawn(PlayerRespawnEvent event) {
     if (Wild.getInstance().getConfiguration().get(ConfigKey.WILD_ON_DEATH_ENABLED)) {
+      PreTeleportEvent preEvent = new PreTeleportEvent(TeleportCause.RESPAWN, event.getPlayer());
+      Bukkit.getPluginManager().callEvent(preEvent);
+      if(preEvent.isCancelled()) {
+        return;
+      }
+
       String worldTarget = Wild.getInstance().getConfiguration().get(ConfigKey.WILD_ON_DEATH_WORLD);
       World world = getWorldFromTarget(worldTarget, event.getPlayer());
       RandomLocation randomLocation = new RandomLocation(event.getPlayer(), world, 0);
       randomLocation.findLocation((Location loc) -> {
         if (loc != null) {
-          event.setRespawnLocation(loc);
           event.getPlayer().teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND);
           event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
+          TeleportEvent teleportEvent = new TeleportEvent(loc, TeleportCause.RESPAWN, event.getPlayer());
+          Bukkit.getPluginManager().callEvent(teleportEvent);
         }
       });
     }

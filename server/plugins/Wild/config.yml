@@ -10,9 +10,9 @@ charge:
 disabled_worlds:
 - world
 wild_on_first_join:
-  enabled: false
+  enabled: true
   world: '@same'
 wild_on_death:
-  enabled: false
+  enabled: true
   world: '@same'
 default_world: '@random'

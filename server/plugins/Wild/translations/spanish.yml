@@ -1,0 +1,29 @@
+reloaded_ok: §eLa configuracion fue actualizada exitosamente.
+reloaded_fail: §eAlgo fue mal al intentar actualizar la configuracion. echa un vistazo
+  a tu config.yml para ver errores de sintaxis.
+no_permission: §eNo tienes permiso para hacer eso.
+wild_not_found: §eNo se ha podido encontrar una ubicacion segura en el mundo. Porfavor
+  intenta otra vez.
+cooldown: §eTienes que esperar <time_left> para poder usar /wild otra vez.
+charge: §eNo tienes suficiente dinero para usar /wild ahora mismo. necesitas <required>
+  pero tienes <current>.
+charge_success: §ePagaste <amount> para usar /wild.
+only_overworld: §eSolo puedes usar /wild en el Mundo.
+missing_player: §eOlvidaste especificar un jugador?
+player_not_found: §eEl jugador con el nombre `<player>` no fue encontrado. estas seguro
+  que lo escribiste Correctamente?
+world_not_found: §eEl mundo con el nombre `<world>` no sue encontrado. estas seguro
+  que lo escribiste correctamente?
+missing_arguments: §cAlgunos argumentos para este comando estan perdidos.\n\nUsage:\n<usage>
+world_disabled: §e/wild esta deshabilitado en este mundo.
+searching: §eBuscando una ubicacion segura...
+timeunit:
+  second: segundo
+  seconds: segundos
+  minute: minuto
+  minutes: minutos
+  hour: hora
+  hours: horas
+  day: dia
+  days: dias
+  now: ahora

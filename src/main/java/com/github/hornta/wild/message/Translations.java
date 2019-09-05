@@ -121,7 +121,11 @@ public class Translations {
         return false;
       }
     } else {
-      plugin.saveResource(resource.getKey(), false);
+      try {
+        plugin.saveResource(resource.getKey(), false);
+      } catch (IllegalArgumentException ex) {
+        plugin.getLogger().log(Level.SEVERE, ex.getMessage(), ex);
+      }
       plugin.getLogger().log(Level.INFO, "Saving new translation file to `" + dest.getName() + "`");
     }
 

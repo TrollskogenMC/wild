@@ -1,21 +1,21 @@
 lastAccountName: hornta
 timestamps:
-  login: 1566765448704
-  logout: 1566504814153
+  login: 1567612277073
+  logout: 1567612327652
 ipAddress: 127.0.0.1
 money: '0.0'
 logoutlocation:
-  world: t1
-  x: 2938.5
-  y: 4.0
-  z: -4757.5
-  yaw: 0.0
-  pitch: 0.0
+  world: world
+  x: -289.3481907721671
+  y: 88.0
+  z: -137.89293328318527
+  yaw: -25.17981
+  pitch: 21.599928
 lastlocation:
-  world: t1
-  x: 2938.5
-  y: 4.0
-  z: -4757.5
-  yaw: 22.799967
-  pitch: 2.850015
+  world: world
+  x: 273.6999999880791
+  y: 70.0
+  z: 222.30000001192093
+  yaw: 18.149931
+  pitch: -30.599825
 afk: false
