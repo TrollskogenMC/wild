@@ -1,11 +1,9 @@
 package com.github.hornta.wild;
 
 import com.github.hornta.carbon.ICommandHandler;
-import com.github.hornta.wild.config.ConfigKey;
 import com.github.hornta.wild.events.TeleportEvent;
 import com.github.hornta.wild.events.PreTeleportEvent;
-import com.github.hornta.wild.message.MessageKey;
-import com.github.hornta.wild.message.MessageManager;
+import com.github.hornta.carbon.message.MessageManager;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.milkbowl.vault.economy.Economy;
@@ -63,6 +61,7 @@ public class WildCommand implements ICommandHandler, Listener {
 
       TeleportEvent teleportEvent = new TeleportEvent(preEvent.getOverrideLocation(), TeleportCause.COMMAND, player);
       Bukkit.getPluginManager().callEvent(teleportEvent);
+      return;
     }
 
     if (numTypedArgs == 0 || (commandSender instanceof Player && player == commandSender)) {

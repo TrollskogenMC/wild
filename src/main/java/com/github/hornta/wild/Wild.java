@@ -1,26 +1,24 @@
 package com.github.hornta.wild;
 
 import com.github.hornta.carbon.*;
-import com.github.hornta.wild.config.ConfigKey;
-import com.github.hornta.wild.config.ConfigType;
-import com.github.hornta.wild.config.Configuration;
-import com.github.hornta.wild.message.MessageKey;
-import com.github.hornta.wild.message.MessageManager;
-import com.github.hornta.wild.message.Translation;
-import com.github.hornta.wild.message.Translations;
+import com.github.hornta.carbon.config.ConfigType;
+import com.github.hornta.carbon.config.Configuration;
+import com.github.hornta.carbon.config.ConfigurationBuilder;
+import com.github.hornta.carbon.message.*;
 import com.wimbli.WorldBorder.WorldBorder;
 import net.milkbowl.vault.economy.Economy;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 
 public class Wild extends JavaPlugin {
   private static Wild instance;
@@ -30,6 +28,7 @@ public class Wild extends JavaPlugin {
   private Translations translations;
   private Economy economy;
   private Metrics metrics;
+  private MessageManager messageManager;
 
   public static Wild getInstance() {
     return instance;
@@ -50,32 +49,59 @@ public class Wild extends JavaPlugin {
     }
     worldBorder = (WorldBorder) Bukkit.getPluginManager().getPlugin("WorldBorder");
 
-    configuration = new Configuration(this);
-    configuration.add(ConfigKey.LANGUAGE, "language", ConfigType.STRING, "english");
-    configuration.add(ConfigKey.COOLDOWN, "cooldown", ConfigType.INTEGER, 60);
-    configuration.add(ConfigKey.TRIES, "tries", ConfigType.INTEGER, 10);
-    configuration.add(ConfigKey.NO_BORDER_SIZE, "no_border_size", ConfigType.INTEGER, 5000);
-    configuration.add(ConfigKey.USE_VANILLA_WORLD_BORDER, "use_vanilla_world_border", ConfigType.BOOLEAN, false);
-    configuration.add(ConfigKey.IMMORTAL_DURATION_AFTER_TELEPORT, "immortal_duration_after_teleport", ConfigType.INTEGER, 5000);
-    configuration.add(ConfigKey.CHARGE_ENABLED, "charge.enabled", ConfigType.BOOLEAN, false);
-    configuration.add(ConfigKey.CHARGE_AMOUNT, "charge.amount", ConfigType.DOUBLE, 10);
-    configuration.add(ConfigKey.DISABLED_WORLDS, "disabled_worlds", ConfigType.LIST, Collections.emptyList());
-    configuration.add(ConfigKey.WILD_ON_FIRST_JOIN_ENABLED, "wild_on_first_join.enabled", ConfigType.BOOLEAN, false);
-    configuration.add(ConfigKey.WILD_ON_FIRST_JOIN_WORLD, "wild_on_first_join.world", ConfigType.STRING, "@same");
-    configuration.add(ConfigKey.WILD_ON_DEATH_ENABLED, "wild_on_death.enabled", ConfigType.BOOLEAN, false);
-    configuration.add(ConfigKey.WILD_ON_DEATH_WORLD, "wild_on_death.world", ConfigType.STRING, "@same");
-    configuration.add(ConfigKey.WILD_DEFAULT_WORLD, "default_world", ConfigType.STRING, "@same");
-    configuration.reload();
-
-    translations = new Translations(this);
-    Translation translation = translations.createTranslation(configuration.get(ConfigKey.LANGUAGE));
-    translation.load();
-    MessageManager.setTranslation(translation);
-    if (!configuration.get(ConfigKey.LANGUAGE).equals("english")) {
-      Translation fallback = translations.createTranslation("english");
-      fallback.load();
-      MessageManager.setFallbackTranslation(fallback);
+    try {
+      configuration = new ConfigurationBuilder(this)
+        .add(ConfigKey.LANGUAGE, "language", ConfigType.STRING.STRING, "english")
+        .add(ConfigKey.COOLDOWN, "cooldown", ConfigType.INTEGER, 60)
+        .add(ConfigKey.TRIES, "tries", ConfigType.INTEGER, 10)
+        .add(ConfigKey.NO_BORDER_SIZE, "no_border_size", ConfigType.INTEGER, 5000)
+        .add(ConfigKey.USE_VANILLA_WORLD_BORDER, "use_vanilla_world_border", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.IMMORTAL_DURATION_AFTER_TELEPORT, "immortal_duration_after_teleport", ConfigType.INTEGER, 5000)
+        .add(ConfigKey.CHARGE_ENABLED, "charge.enabled", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.CHARGE_AMOUNT, "charge.amount", ConfigType.DOUBLE, 10)
+        .add(ConfigKey.DISABLED_WORLDS, "disabled_worlds", ConfigType.LIST, Collections.emptyList())
+        .add(ConfigKey.WILD_ON_FIRST_JOIN_ENABLED, "wild_on_first_join.enabled", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.WILD_ON_FIRST_JOIN_WORLD, "wild_on_first_join.world", ConfigType.STRING, "@same")
+        .add(ConfigKey.WILD_ON_DEATH_ENABLED, "wild_on_death.enabled", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.WILD_ON_DEATH_WORLD, "wild_on_death.world", ConfigType.STRING, "@same")
+        .add(ConfigKey.WILD_DEFAULT_WORLD, "default_world", ConfigType.STRING, "@same")
+        .build();
+    } catch (Exception e) {
+      setEnabled(false);
+      getLogger().log(Level.SEVERE, e.getMessage(), e);
+      return;
     }
+
+    messageManager = new MessagesBuilder()
+      .add(MessageKey.CONFIGURATION_RELOADED, "reloaded_ok")
+      .add(MessageKey.CONFIGURATION_RELOAD_FAILED, "reloaded_fail")
+      .add(MessageKey.WILD_NOT_FOUND, "wild_not_found")
+      .add(MessageKey.COOLDOWN, "cooldown")
+      .add(MessageKey.CHARGE, "charge")
+      .add(MessageKey.CHARGE_SUCCESS, "charge_success")
+      .add(MessageKey.NO_PERMISSION, "no_permission")
+      .add(MessageKey.ONLY_OVERWORLD, "only_overworld")
+      .add(MessageKey.FORGET_PLAYER, "forget_player")
+      .add(MessageKey.WORLD_NOT_FOUND, "world_not_found")
+      .add(MessageKey.PLAYER_NOT_FOUND, "player_not_found")
+      .add(MessageKey.MISSING_ARGUMENTS, "missing_arguments")
+      .add(MessageKey.WORLD_DISABLED, "world_disabled")
+      .add(MessageKey.SEARCHING_ACTION_BAR, "searching")
+      .add(MessageKey.TIME_UNIT_SECOND, "timeunit.second")
+      .add(MessageKey.TIME_UNIT_SECONDS, "timeunit.seconds")
+      .add(MessageKey.TIME_UNIT_MINUTE, "timeunit.minute")
+      .add(MessageKey.TIME_UNIT_MINUTES, "timeunit.minutes")
+      .add(MessageKey.TIME_UNIT_HOUR, "timeunit.hour")
+      .add(MessageKey.TIME_UNIT_HOURS, "timeunit.hours")
+      .add(MessageKey.TIME_UNIT_DAY, "timeunit.day")
+      .add(MessageKey.TIME_UNIT_DAYS, "timeunit.days")
+      .add(MessageKey.TIME_UNIT_NOW, "timeunit.now")
+      .build();
+
+    translations = new Translations(this, messageManager);
+    Translation translation = translations.createTranslation(configuration.get(ConfigKey.LANGUAGE));
+    Translation fallbackTranslation = translations.createTranslation("english");
+    messageManager.setTranslation(translation, fallbackTranslation);
 
     carbon = new Carbon();
     carbon.setNoPermissionHandler((CommandSender sender, CarbonCommand command) -> {
@@ -111,7 +137,7 @@ public class Wild extends JavaPlugin {
         .setType(CarbonArgumentType.WORLD_NORMAL)
         .dependsOn(playerArg)
         .setDefaultValue(Player.class, (CommandSender sender, String[] prevArgs) -> ((Player) sender).getWorld().getName())
-        .setDefaultValue(CommandSender.class,(CommandSender sender, String[] prevArgs) -> {
+        .setDefaultValue(ConsoleCommandSender.class, (CommandSender sender, String[] prevArgs) -> {
           Player player = Bukkit.getPlayer(prevArgs[0]);
           return player.getWorld().getName();
         })

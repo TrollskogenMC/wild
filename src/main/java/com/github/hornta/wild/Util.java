@@ -1,7 +1,6 @@
 package com.github.hornta.wild;
 
-import com.github.hornta.wild.message.MessageKey;
-import com.github.hornta.wild.message.MessageManager;
+import com.github.hornta.carbon.message.MessageManager;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -14,17 +13,6 @@ public class Util {
   private static final int SECONDS_IN_ONE_MINUTE = 60;
   private static final int MAX_DURATION_UNITS = 2;
   private static final Random random = new Random();
-
-  public static String getFilenameWithoutExtension(File file) {
-    String filename = file.getName();
-    int lastDotIndex = filename.lastIndexOf('.');
-
-    if(lastDotIndex == -1) {
-      return filename;
-    }
-
-    return filename.substring(0, lastDotIndex);
-  }
 
   public static String getTimeLeft(int duration) {
     if(duration == 0) {

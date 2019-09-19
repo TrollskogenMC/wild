@@ -1,4 +1,4 @@
-package com.github.hornta.wild.config;
+package com.github.hornta.wild;
 
 public enum ConfigKey {
   LANGUAGE,

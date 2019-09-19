@@ -111,7 +111,7 @@
 [21:18:06] [Server thread/INFO]: Time elapsed: 30 ms
 [21:18:06] [Server thread/INFO]: [Wild] Enabling Wild v0.9.0
 [21:18:06] [Server thread/INFO]: [org.reflections.Reflections] Reflections took 242 ms to scan 16 urls, producing 33960 keys and 35630 values 
-[21:18:06] [Server thread/INFO]: [Wild] Found existing translation file in english.yml.
-[21:18:06] [Server thread/INFO]: [Wild] Found existing translation file in spanish.yml.
+[21:18:06] [Server thread/INFO]: [Wild] Found existing primaryTranslation file in english.yml.
+[21:18:06] [Server thread/INFO]: [Wild] Found existing primaryTranslation file in spanish.yml.
 [21:18:06] [Server thread/INFO]: Done (2.597s)! For help, type "help"
 [21:18:06] [Server thread/INFO]: Timings Reset

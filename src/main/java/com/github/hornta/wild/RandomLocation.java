@@ -1,9 +1,7 @@
 package com.github.hornta.wild;
 
-import com.github.hornta.wild.config.ConfigKey;
 import com.wimbli.WorldBorder.BorderData;
 import com.wimbli.WorldBorder.Config;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -14,7 +12,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Consumer;
 import org.bukkit.util.Vector;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
