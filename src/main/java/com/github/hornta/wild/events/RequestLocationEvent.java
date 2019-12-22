@@ -1,20 +1,19 @@
 package com.github.hornta.wild.events;
 
+import com.github.hornta.wild.PlayerSearch;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-import java.util.UUID;
-
-public class RequestLocation extends Event {
+public class RequestLocationEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
-  private UUID playerId;
+  private PlayerSearch search;
 
-  RequestLocation(UUID playerId) {
-    this.playerId = playerId;
+  public RequestLocationEvent(PlayerSearch search) {
+    this.search = search;
   }
 
-  public UUID getPlayerId() {
-    return playerId;
+  public PlayerSearch getSearch() {
+    return search;
   }
 
   public static HandlerList getHandlerList() {

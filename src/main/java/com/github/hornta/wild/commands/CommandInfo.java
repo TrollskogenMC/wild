@@ -2,27 +2,46 @@ package com.github.hornta.wild.commands;
 
 import com.github.hornta.carbon.ICommandHandler;
 import com.github.hornta.carbon.message.MessageManager;
-import com.github.hornta.carbon.message.Translation;
 import com.github.hornta.wild.ConfigKey;
 import com.github.hornta.wild.MessageKey;
-import com.github.hornta.wild.Wild;
-import com.github.hornta.wild.events.ConfigReloadedEvent;
-import org.bukkit.Bukkit;
+import com.github.hornta.wild.WildPlugin;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 
-public class CommandReload implements ICommandHandler {
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+public class CommandInfo implements ICommandHandler {
   public void handle(CommandSender commandSender, String[] strings, int typedArgs) {
-    try {
-      Wild.getInstance().getConfiguration().reload();
-    } catch (Exception e) {
-      MessageManager.sendMessage(commandSender, MessageKey.CONFIGURATION_RELOAD_FAILED);
-      return;
-    }
-
-    Bukkit.getPluginManager().callEvent(new ConfigReloadedEvent());
-
-    Translation translation = Wild.getInstance().getTranslations().createTranslation(Wild.getInstance().getConfiguration().get(ConfigKey.LANGUAGE));
-    MessageManager.getInstance().setPrimaryTranslation(translation);
-    MessageManager.sendMessage(commandSender, MessageKey.CONFIGURATION_RELOADED);
+    boolean vanillaBorder = WildPlugin.getInstance().getConfiguration().get(ConfigKey.USE_VANILLA_WORLD_BORDER);
+    String vanillaBorderResult = vanillaBorder ? MessageManager.getMessage(MessageKey.YES) : MessageManager.getMessage(MessageKey.NO);
+    MessageManager.setValue("cooldown", (int) WildPlugin.getInstance().getConfiguration().get(ConfigKey.COOLDOWN));
+    MessageManager.setValue("vanilla_border", vanillaBorderResult);
+    MessageManager.setValue(
+      "buffered_locations",
+      WildPlugin
+        .getInstance()
+        .getWildManager()
+        .getLocationsByWorld()
+        .entrySet()
+        .stream()
+        .map((Map.Entry<World, LinkedList<Location>> entry) -> entry.getKey().getName() + ": " + entry.getValue().size())
+        .collect(Collectors.joining(", "))
+    );
+    MessageManager.setValue(
+      "locations_loaded",
+      WildPlugin
+        .getInstance()
+        .getWildManager()
+        .getLocationsByWorld()
+        .keySet()
+        .stream()
+        .filter((World world) -> world.getPluginChunkTickets().get(WildPlugin.getInstance()) != null)
+        .map((World world) -> world.getName() + ": " + world.getPluginChunkTickets().get(WildPlugin.getInstance()).size())
+        .collect(Collectors.joining(", "))
+    );
+    MessageManager.sendMessage(commandSender, MessageKey.INFO);
   }
 }

@@ -2,6 +2,7 @@ package com.github.hornta.wild.commands;
 
 import com.github.hornta.carbon.ICommandHandler;
 import com.github.hornta.wild.*;
+import com.github.hornta.wild.engine.WildManager;
 import com.github.hornta.wild.events.RequestLocationEvent;
 import com.github.hornta.wild.events.TeleportEvent;
 import com.github.hornta.wild.events.PreTeleportEvent;
@@ -19,10 +20,10 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.*;
 
-public class WildCommand implements ICommandHandler, Listener {
+public class CommandWild implements ICommandHandler, Listener {
   private WildManager wildManager;
 
-  WildCommand(WildManager wildManager) {
+  public CommandWild(WildManager wildManager) {
     this.wildManager = wildManager;
   }
 
@@ -57,12 +58,12 @@ public class WildCommand implements ICommandHandler, Listener {
     }
 
     if (numTypedArgs == 0 || (commandSender instanceof Player && player == commandSender)) {
-      double amount = Wild.getInstance().getConfiguration().get(ConfigKey.CHARGE_AMOUNT);
-      economy = Wild.getInstance().getEconomy();
+      double amount = WildPlugin.getInstance().getConfiguration().get(ConfigKey.CHARGE_AMOUNT);
+      economy = WildPlugin.getInstance().getEconomy();
       if (
         !player.hasPermission("wild.bypasscharge") &&
           economy != null &&
-          (boolean)Wild.getInstance().getConfiguration().get(ConfigKey.CHARGE_ENABLED) &&
+          (boolean) WildPlugin.getInstance().getConfiguration().get(ConfigKey.CHARGE_ENABLED) &&
           amount != 0.0
       ) {
         if (economy.getBalance(player) < amount) {
@@ -84,7 +85,7 @@ public class WildCommand implements ICommandHandler, Listener {
     }
 
     if (numTypedArgs == 0) {
-      world = Util.getWorldFromTarget(Wild.getInstance().getConfiguration().get(ConfigKey.WILD_DEFAULT_WORLD), player);
+      world = Util.getWorldFromTarget(WildPlugin.getInstance().getConfiguration().get(ConfigKey.WILD_DEFAULT_WORLD), player);
     } else if (numTypedArgs == 1) {
       world = player.getWorld();
     } else {
@@ -101,7 +102,7 @@ public class WildCommand implements ICommandHandler, Listener {
     }
 
     if (args.length == 0) {
-      List<String> disabledWorlds = Wild.getInstance().getConfiguration().get(ConfigKey.DISABLED_WORLDS);
+      List<String> disabledWorlds = WildPlugin.getInstance().getConfiguration().get(ConfigKey.DISABLED_WORLDS);
       if (disabledWorlds.contains(world.getName())) {
         MessageManager.sendMessage(player, MessageKey.WORLD_DISABLED);
         return;

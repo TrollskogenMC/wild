@@ -1,7 +1,10 @@
 package com.github.hornta.wild;
 
-import com.github.hornta.wild.events.BufferedLocation;
+import com.github.hornta.wild.engine.WildManager;
+import com.github.hornta.wild.events.BufferedLocationEvent;
+import io.papermc.lib.PaperLib;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -9,23 +12,28 @@ import org.bukkit.util.Vector;
 
 import java.util.*;
 
-public class LocationTask extends BukkitRunnable {
+public class BufferLocationTask extends BukkitRunnable {
   private final WildManager wildManager;
   private final Random random;
 
-  LocationTask(WildManager wildManager) {
+  public BufferLocationTask(WildManager wildManager) {
     this.wildManager = wildManager;
     this.random = new Random();
   }
 
   @Override
   public void run() {
-    Optional<Map.Entry<World, List<Location>>> worldLocation = wildManager
+    Optional<Map.Entry<World, LinkedList<Location>>> worldLocation = wildManager
       .getLocationsByWorld()
       .entrySet()
       .stream()
-      .min(Comparator.comparingInt((Map.Entry<World, List<Location>> a) -> a.getValue().size()));
+      .min(Comparator.comparingInt((Map.Entry<World, LinkedList<Location>> a) -> a.getValue().size()));
     if(!worldLocation.isPresent()) {
+      return;
+    }
+
+    if(worldLocation.get().getValue().size() >= (int)wildManager.getPlugin().getConfiguration().get(ConfigKey.PERF_BUFFER_SIZE)) {
+      WildPlugin.debug("Reached maximum buffer size");
       return;
     }
 
@@ -52,29 +60,29 @@ public class LocationTask extends BukkitRunnable {
       );
     }
 
-    loc = new Location(
-      world,
-      (int) randX,
-      world.getHighestBlockYAt((int) randX, (int) randZ),
-      (int) randZ
-    ).add(new Vector(0.5, 0, 0.5));
+    loc = new Location(world, (int) randX, 0, (int) randZ).add(new Vector(0.5, 0, 0.5));
 
-    if (lookup.getWbBorderData() != null && !lookup.getWbBorderData().insideBorder(loc)) {
-      return;
-    }
+    PaperLib.getChunkAtAsync(loc).thenAccept((Chunk c) -> {
+      Bukkit.getScheduler().runTaskLater(wildManager.getPlugin(), () -> {
+        int y = world.getHighestBlockYAt((int) randX, (int) randZ);
+        loc.setY(y);
 
-    if (!world.getWorldBorder().isInside(loc)) {
-      return;
-    }
+        if (lookup.getWbBorderData() != null && !lookup.getWbBorderData().insideBorder(loc)) {
+          return;
+        }
 
-    if (!Util.isSafeStandBlock(loc.getBlock())) {
-      return;
-    }
+        if (!Util.isSafeStandBlock(loc.getBlock())) {
+          return;
+        }
 
-    Location finalLocation = Util.findSpaceBelow(loc);
-    if(finalLocation != null) {
-      worldLocation.get().getValue().add(finalLocation);
-      Bukkit.getPluginManager().callEvent(new BufferedLocation());
-    }
+        Location finalLocation = Util.findSpaceBelow(loc);
+        if(finalLocation != null) {
+          WildPlugin.debug("Found location %s", loc);
+          worldLocation.get().getValue().offer(finalLocation);
+          BufferedLocationEvent event = new BufferedLocationEvent(finalLocation);
+          Bukkit.getPluginManager().callEvent(event);
+        }
+      }, 0);
+    });
   }
 }

@@ -4,29 +4,20 @@ import org.bukkit.Location;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-public class BufferedLocationEvent extends Event {
+public class PollLocationEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
-  private boolean isCancelled;
   private Location location;
 
   public static HandlerList getHandlerList() {
     return handlers;
   }
 
-  public BufferedLocationEvent(Location location) {
+  public PollLocationEvent(Location location) {
     this.location = location;
   }
 
   public Location getLocation() {
     return location;
-  }
-
-  public void setCancelled(boolean cancelled) {
-    isCancelled = cancelled;
-  }
-
-  public boolean isCancelled() {
-    return isCancelled;
   }
 
   @Override

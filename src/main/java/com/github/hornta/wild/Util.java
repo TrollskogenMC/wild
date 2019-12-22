@@ -1,11 +1,18 @@
 package com.github.hornta.wild;
 
 import com.github.hornta.carbon.message.MessageManager;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class Util {
   private static final int SECONDS_IN_ONE_DAY = 86400;
@@ -13,6 +20,74 @@ public class Util {
   private static final int SECONDS_IN_ONE_MINUTE = 60;
   private static final int MAX_DURATION_UNITS = 2;
   private static final Random random = new Random();
+  private static final Set<Material> bannedMaterials;
+  private static final Set<Material> findBelow;
+
+  static {
+    bannedMaterials = new HashSet<>();
+    bannedMaterials.add(Material.VOID_AIR);
+    bannedMaterials.add(Material.WATER);
+    bannedMaterials.add(Material.LAVA);
+    bannedMaterials.add(Material.TRIPWIRE);
+    bannedMaterials.add(Material.FIRE);
+    bannedMaterials.add(Material.CACTUS);
+    bannedMaterials.add(Material.SWEET_BERRY_BUSH);
+    bannedMaterials.add(Material.CAMPFIRE);
+    bannedMaterials.add(Material.COBWEB);
+    bannedMaterials.add(Material.MAGMA_BLOCK);
+    bannedMaterials.add(Material.ACACIA_PRESSURE_PLATE);
+    bannedMaterials.add(Material.BIRCH_PRESSURE_PLATE);
+    bannedMaterials.add(Material.JUNGLE_PRESSURE_PLATE);
+    bannedMaterials.add(Material.OAK_PRESSURE_PLATE);
+    bannedMaterials.add(Material.SPRUCE_PRESSURE_PLATE);
+    bannedMaterials.add(Material.DARK_OAK_PRESSURE_PLATE);
+    bannedMaterials.add(Material.STONE_PRESSURE_PLATE);
+    bannedMaterials.add(Material.HEAVY_WEIGHTED_PRESSURE_PLATE);
+    bannedMaterials.add(Material.LIGHT_WEIGHTED_PRESSURE_PLATE);
+    bannedMaterials.add(Material.END_PORTAL);
+    bannedMaterials.add(Material.ACACIA_TRAPDOOR);
+    bannedMaterials.add(Material.BIRCH_TRAPDOOR);
+    bannedMaterials.add(Material.DARK_OAK_TRAPDOOR);
+    bannedMaterials.add(Material.IRON_TRAPDOOR);
+    bannedMaterials.add(Material.JUNGLE_TRAPDOOR);
+    bannedMaterials.add(Material.OAK_TRAPDOOR);
+    bannedMaterials.add(Material.SPRUCE_TRAPDOOR);
+    bannedMaterials.add(Material.MOVING_PISTON);
+    bannedMaterials.add(Material.TNT);
+    bannedMaterials.add(Material.SPAWNER);
+
+    findBelow = new HashSet<>();
+    findBelow.add(Material.ACACIA_LEAVES);
+    findBelow.add(Material.BIRCH_LEAVES);
+    findBelow.add(Material.DARK_OAK_LEAVES);
+    findBelow.add(Material.JUNGLE_LEAVES);
+    findBelow.add(Material.OAK_LEAVES);
+    findBelow.add(Material.SPRUCE_LEAVES);
+    findBelow.add(Material.ACACIA_LOG);
+    findBelow.add(Material.BIRCH_LOG);
+    findBelow.add(Material.DARK_OAK_LOG);
+    findBelow.add(Material.JUNGLE_LOG);
+    findBelow.add(Material.OAK_LOG);
+    findBelow.add(Material.SPRUCE_LOG);
+    findBelow.add(Material.ACACIA_WOOD);
+    findBelow.add(Material.BIRCH_WOOD);
+    findBelow.add(Material.DARK_OAK_WOOD);
+    findBelow.add(Material.JUNGLE_WOOD);
+    findBelow.add(Material.OAK_WOOD);
+    findBelow.add(Material.SPRUCE_WOOD);
+    findBelow.add(Material.STRIPPED_ACACIA_LOG);
+    findBelow.add(Material.STRIPPED_BIRCH_LOG);
+    findBelow.add(Material.STRIPPED_DARK_OAK_LOG);
+    findBelow.add(Material.STRIPPED_JUNGLE_LOG);
+    findBelow.add(Material.STRIPPED_OAK_LOG);
+    findBelow.add(Material.STRIPPED_SPRUCE_LOG);
+    findBelow.add(Material.STRIPPED_ACACIA_WOOD);
+    findBelow.add(Material.STRIPPED_BIRCH_WOOD);
+    findBelow.add(Material.STRIPPED_DARK_OAK_WOOD);
+    findBelow.add(Material.STRIPPED_JUNGLE_WOOD);
+    findBelow.add(Material.STRIPPED_OAK_WOOD);
+    findBelow.add(Material.STRIPPED_SPRUCE_WOOD);
+  }
 
   public static String getTimeLeft(int duration) {
     if(duration == 0) {
@@ -76,5 +151,70 @@ public class Util {
 
   public static int randInt(int min, int max) {
     return random.nextInt(max - min + 1) + min;
+  }
+
+  public static boolean isSafeStandBlock(Block block) {
+    return
+      block.getWorld().getWorldBorder().isInside(block.getLocation()) &&
+      !bannedMaterials.contains(block.getType()) &&
+      !bannedMaterials.contains(block.getRelative(BlockFace.DOWN).getType()) &&
+      !bannedMaterials.contains(block.getRelative(BlockFace.UP).getType());
+  }
+
+  public static Location findSpaceBelow(Location location) {
+    Block currentCheck = location.getWorld().getBlockAt(location);
+    int airHeight = 0;
+
+    for (int i = 0; i < 30; ++i) {
+      if (findBelow.contains(currentCheck.getType())) {
+        airHeight = 0;
+      } else if (currentCheck.getType() == Material.AIR) {
+        airHeight += 1;
+      } else {
+        return location;
+      }
+
+      Block aboveBlock = currentCheck;
+      currentCheck = currentCheck.getRelative(BlockFace.DOWN);
+
+      if (
+        !findBelow.contains(currentCheck.getType()) &&
+          currentCheck.getType().isSolid() &&
+          airHeight >= 2 &&
+          isSafeStandBlock(aboveBlock) &&
+          aboveBlock.getLightFromSky() > 7
+      ) {
+        return aboveBlock.getLocation().add(new Vector(0.5, 0, 0.5));
+      }
+    }
+
+    return location;
+  }
+
+  public static World getWorldFromTarget(String target, Player player) {
+    World world;
+    switch (target) {
+      case "@same":
+        world = player.getWorld();
+        break;
+      case "@random":
+        List<String> disabledWorlds = WildPlugin.getInstance().getConfiguration().get(ConfigKey.DISABLED_WORLDS);
+        List<World> worlds = Bukkit.getWorlds().stream().filter((World w) -> w.getEnvironment() == World.Environment.NORMAL && !disabledWorlds.contains(w.getName())).collect(Collectors.toList());
+        if(worlds.isEmpty()) {
+          world = player.getWorld();
+        } else {
+          world = worlds.get(Util.randInt(0, worlds.size() - 1));
+        }
+        break;
+      default:
+        world = Bukkit.getWorld(target);
+    }
+
+    if (world == null) {
+      world = player.getWorld();
+      WildPlugin.getInstance().getLogger().log(Level.WARNING, "A world couldn't be found with target `" + target + "`");
+    }
+
+    return world;
   }
 }

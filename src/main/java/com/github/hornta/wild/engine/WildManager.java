@@ -1,6 +1,7 @@
-package com.github.hornta.wild;
+package com.github.hornta.wild.engine;
 
 import com.github.hornta.carbon.message.MessageManager;
+import com.github.hornta.wild.*;
 import com.github.hornta.wild.events.*;
 import com.wimbli.WorldBorder.BorderData;
 import com.wimbli.WorldBorder.Config;
@@ -27,30 +28,31 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.*;
 
 public class WildManager implements Listener {
-  private Wild plugin;
+  private WildPlugin plugin;
   private Map<World, LinkedList<Location>> locationsByWorld;
   private Map<World, LookupData> lookupDataByWorld;
   private LinkedList<PlayerSearch> currentlyLooking;
   private Map<UUID, Long> immortals;
   private HashMap<UUID, Long> playerCooldowns;
-  private int numKeepLoaded;
   private int bufferInterval;
   private BukkitTask bufferTask;
+  private ForceLoadedSystem forceLoadedSystem;
 
-  WildManager(Wild plugin) {
-    this.plugin = plugin;
+  public WildManager(WildPlugin wildPlugin) {
+    this.plugin = wildPlugin;
     locationsByWorld = new HashMap<>();
     lookupDataByWorld = new HashMap<>();
     currentlyLooking = new LinkedList<>();
     immortals = new HashMap<>();
     playerCooldowns = new HashMap<>();
-    numKeepLoaded = plugin.getConfiguration().get(ConfigKey.PERF_KEEP_BUFFER_LOADED);
-    bufferInterval = plugin.getConfiguration().get(ConfigKey.PERF_BUFFER_INTERVAL);
-    for(World world : plugin.getServer().getWorlds()) {
+    bufferInterval = wildPlugin.getConfiguration().get(ConfigKey.PERF_BUFFER_INTERVAL);
+    for(World world : wildPlugin.getServer().getWorlds()) {
       acceptWorld(world);
     }
-    bufferTask = new BufferLocationTask(this).runTaskTimer(plugin, 20, bufferInterval);
-    new ProcessQueueTask(this).runTaskTimer(plugin, 20, 5);
+    bufferTask = new BufferLocationTask(this).runTaskTimer(wildPlugin, 20, bufferInterval);
+    new ProcessQueueTask(this).runTaskTimer(wildPlugin, 20, 5);
+    forceLoadedSystem = new ForceLoadedSystem(wildPlugin, this);
+    Bukkit.getPluginManager().registerEvents(forceLoadedSystem, wildPlugin);
   }
 
   @EventHandler
@@ -94,8 +96,8 @@ public class WildManager implements Listener {
 
   @EventHandler
   void onPlayerJoin(PlayerJoinEvent event) {
-    if ((boolean)Wild.getInstance().getConfiguration().get(ConfigKey.WILD_ON_FIRST_JOIN_ENABLED) && !event.getPlayer().hasPlayedBefore()) {
-      Wild.debug("First join of %s", event.getPlayer().getName());
+    if ((boolean) WildPlugin.getInstance().getConfiguration().get(ConfigKey.WILD_ON_FIRST_JOIN_ENABLED) && !event.getPlayer().hasPlayedBefore()) {
+      WildPlugin.debug("First join of %s", event.getPlayer().getName());
       PreTeleportEvent preEvent = new PreTeleportEvent(TeleportCause.FIRST_JOIN, event.getPlayer());
       Bukkit.getPluginManager().callEvent(preEvent);
       if(preEvent.isCancelled()) {
@@ -103,7 +105,7 @@ public class WildManager implements Listener {
       }
 
       if(preEvent.getOverrideLocation() != null) {
-        Bukkit.getScheduler().runTaskLater(Wild.getInstance(), () -> {
+        Bukkit.getScheduler().runTaskLater(WildPlugin.getInstance(), () -> {
           event.getPlayer().teleport(preEvent.getOverrideLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
           event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
 
@@ -113,7 +115,7 @@ public class WildManager implements Listener {
         return;
       }
 
-      String worldTarget = Wild.getInstance().getConfiguration().get(ConfigKey.WILD_ON_FIRST_JOIN_WORLD);
+      String worldTarget = WildPlugin.getInstance().getConfiguration().get(ConfigKey.WILD_ON_FIRST_JOIN_WORLD);
       World world = Util.getWorldFromTarget(worldTarget, event.getPlayer());
       PlayerSearch search = new PlayerSearch(event.getPlayer().getUniqueId(), world, TeleportCause.FIRST_JOIN);
       RequestLocationEvent request = new RequestLocationEvent(search);
@@ -123,7 +125,7 @@ public class WildManager implements Listener {
 
   @EventHandler
   void onPlayerRespawn(PlayerRespawnEvent event) {
-    if (Wild.getInstance().getConfiguration().get(ConfigKey.WILD_ON_DEATH_ENABLED)) {
+    if (WildPlugin.getInstance().getConfiguration().get(ConfigKey.WILD_ON_DEATH_ENABLED)) {
       PreTeleportEvent preEvent = new PreTeleportEvent(TeleportCause.RESPAWN, event.getPlayer());
       Bukkit.getPluginManager().callEvent(preEvent);
       if(preEvent.isCancelled()) {
@@ -138,7 +140,7 @@ public class WildManager implements Listener {
         return;
       }
 
-      String worldTarget = Wild.getInstance().getConfiguration().get(ConfigKey.WILD_ON_DEATH_WORLD);
+      String worldTarget = WildPlugin.getInstance().getConfiguration().get(ConfigKey.WILD_ON_DEATH_WORLD);
       World world = Util.getWorldFromTarget(worldTarget, event.getPlayer());
       PlayerSearch search = new PlayerSearch(event.getPlayer().getUniqueId(), world, TeleportCause.RESPAWN);
       RequestLocationEvent request = new RequestLocationEvent(search);
@@ -148,11 +150,6 @@ public class WildManager implements Listener {
 
   @EventHandler
   void onConfigReloaded(ConfigReloadedEvent event) {
-    for(Map.Entry<World, LinkedList<Location>> entry : locationsByWorld.entrySet()) {
-      for(Location location : entry.getValue()) {
-        location.getChunk().removePluginChunkTicket(plugin);
-      }
-    }
     locationsByWorld.clear();
     lookupDataByWorld.clear();
 
@@ -170,10 +167,10 @@ public class WildManager implements Listener {
 
   @EventHandler
   void onRequestLocation(RequestLocationEvent event) {
-    Wild.debug("%s request location caused by %s", Bukkit.getPlayer(event.getSearch().getUuid()).getName(), event.getSearch().getCause());
+    WildPlugin.debug("%s request location caused by %s", Bukkit.getPlayer(event.getSearch().getUuid()).getName(), event.getSearch().getCause());
     for(PlayerSearch search : currentlyLooking) {
       if(search.getUuid().equals(event.getSearch().getUuid())) {
-        Wild.debug("%s is already looking for a location, skipping...", Bukkit.getPlayer(event.getSearch().getUuid()).getName());
+        WildPlugin.debug("%s is already looking for a location, skipping...", Bukkit.getPlayer(event.getSearch().getUuid()).getName());
         return;
       }
     }
@@ -190,17 +187,17 @@ public class WildManager implements Listener {
   @EventHandler(ignoreCancelled = true)
   void onFoundLocation(FoundLocationEvent event) {
     Player player = Bukkit.getPlayer(event.getSearch().getUuid());
-    Wild.debug("Location found for player %s at %s caused by %s", player.getName(), player.getLocation(), event.getSearch().getCause());
+    WildPlugin.debug("Location found for player %s at %s caused by %s", player.getName(), player.getLocation(), event.getSearch().getCause());
 
     if (event.getSearch().getFee() > 0) {
-      EconomyResponse response = Wild.getInstance().getEconomy().withdrawPlayer(player, event.getSearch().getFee());
+      EconomyResponse response = WildPlugin.getInstance().getEconomy().withdrawPlayer(player, event.getSearch().getFee());
       if (response.type == EconomyResponse.ResponseType.SUCCESS) {
-        MessageManager.setValue("amount", Wild.getInstance().getEconomy().format(event.getSearch().getFee()));
+        MessageManager.setValue("amount", WildPlugin.getInstance().getEconomy().format(event.getSearch().getFee()));
         MessageManager.sendMessage(player, MessageKey.CHARGE_SUCCESS);
       }
     }
 
-    int immortal_duration = Wild.getInstance().getConfiguration().get(ConfigKey.IMMORTAL_DURATION_AFTER_TELEPORT);
+    int immortal_duration = WildPlugin.getInstance().getConfiguration().get(ConfigKey.IMMORTAL_DURATION_AFTER_TELEPORT);
     if (immortal_duration > 0) {
       immortals.put(event.getSearch().getUuid(), System.currentTimeMillis() + immortal_duration);
     }
@@ -213,40 +210,18 @@ public class WildManager implements Listener {
     player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
     if(event.getSearch().getCause() == TeleportCause.COMMAND) {
       player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(""));
-      playerCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + (int) Wild.getInstance().getConfiguration().get(ConfigKey.COOLDOWN) * 1000);
+      playerCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + (int) WildPlugin.getInstance().getConfiguration().get(ConfigKey.COOLDOWN) * 1000);
     }
     TeleportEvent teleportEvent = new TeleportEvent(event.getLocation(), TeleportCause.COMMAND, player);
     Bukkit.getPluginManager().callEvent(teleportEvent);
   }
 
-  @EventHandler(ignoreCancelled = true)
-  void onBufferedLocation(BufferedLocationEvent event) {
-    Queue<Location> locations = locationsByWorld.get(event.getLocation().getWorld());
-    if(locations.size() <= numKeepLoaded) {
-      Wild.debug("Keep chunk of location %s loaded", event.getLocation());
-      event.getLocation().getChunk().addPluginChunkTicket(plugin);
-    }
-  }
-
-  @EventHandler
-  void onPollLocation(PollLocationEvent event) {
-    event.getLocation().getChunk().removePluginChunkTicket(plugin);
-    LinkedList<Location> locations = locationsByWorld.get(event.getLocation().getWorld());
-    if(locations.size() < numKeepLoaded) {
-      Wild.debug("All locations are already kept loaded.");
-      return;
-    }
-    Location loc = locations.get(numKeepLoaded - 1);
-    Wild.debug("Keep chunk of location %s loaded", loc);
-    loc.getChunk().addPluginChunkTicket(plugin);
-  }
-
   @EventHandler
   void onDropUnsafeLocation(DropUnsafeLocationEvent event) {
-    Wild.debug("Dropped unsafe location %s for player %s caused by %s", event.getLocation(), Bukkit.getPlayer(event.getSearch().getUuid()), event.getSearch().getCause());
+    WildPlugin.debug("Dropped unsafe location %s for player %s caused by %s", event.getLocation(), Bukkit.getPlayer(event.getSearch().getUuid()), event.getSearch().getCause());
     int maxTries = plugin.getConfiguration().get(ConfigKey.PERF_COMMAND_MAX_TRIES);
     if(event.getSearch().getTries() >= maxTries && event.getSearch().getCause() == TeleportCause.COMMAND) {
-      Wild.debug("Search cancelled too many tries %d", maxTries);
+      WildPlugin.debug("Search cancelled too many tries %d", maxTries);
       currentlyLooking.poll();
       MessageManager.sendMessage(Bukkit.getPlayer(event.getSearch().getUuid()), MessageKey.WILD_NOT_FOUND);
     }
@@ -257,14 +232,14 @@ public class WildManager implements Listener {
       return;
     }
 
-    List<String> disabledWorlds = Wild.getInstance().getConfiguration().get(ConfigKey.DISABLED_WORLDS);
+    List<String> disabledWorlds = WildPlugin.getInstance().getConfiguration().get(ConfigKey.DISABLED_WORLDS);
     for(String worldName : disabledWorlds) {
       if(worldName.equalsIgnoreCase(world.getName())) {
         return;
       }
     }
 
-    Wild.debug("Accepting world %s", world.getName());
+    WildPlugin.debug("Accepting world %s", world.getName());
 
     locationsByWorld.put(world, new LinkedList<>());
 
@@ -275,7 +250,7 @@ public class WildManager implements Listener {
     int radiusX;
     int radiusZ;
 
-    if (Wild.getInstance().getWorldBorder() != null) {
+    if (WildPlugin.getInstance().getWorldBorder() != null) {
       borderData = Config.getBorders().getOrDefault(world.getName(), null);
     }
 
@@ -289,7 +264,7 @@ public class WildManager implements Listener {
       } else {
         isRound = false;
       }
-    } else if (Wild.getInstance().getConfiguration().get(ConfigKey.USE_VANILLA_WORLD_BORDER)) {
+    } else if (WildPlugin.getInstance().getConfiguration().get(ConfigKey.USE_VANILLA_WORLD_BORDER)) {
       centerX = world.getWorldBorder().getCenter().getBlockX();
       centerZ = world.getWorldBorder().getCenter().getBlockZ();
       radiusX = (int) Math.ceil(world.getWorldBorder().getSize() / 2);
@@ -298,8 +273,8 @@ public class WildManager implements Listener {
     } else {
       centerX = world.getSpawnLocation().getBlockX();
       centerZ = world.getSpawnLocation().getBlockZ();
-      radiusX = Wild.getInstance().getConfiguration().get(ConfigKey.NO_BORDER_SIZE);
-      radiusZ = Wild.getInstance().getConfiguration().get(ConfigKey.NO_BORDER_SIZE);
+      radiusX = WildPlugin.getInstance().getConfiguration().get(ConfigKey.NO_BORDER_SIZE);
+      radiusZ = WildPlugin.getInstance().getConfiguration().get(ConfigKey.NO_BORDER_SIZE);
       isRound = false;
     }
 
@@ -318,6 +293,10 @@ public class WildManager implements Listener {
     return locationsByWorld;
   }
 
+  public LinkedList<Location> getLocations(World world) {
+    return locationsByWorld.get(world);
+  }
+
   public Map<World, LookupData> getLookupDataByWorld() {
     return lookupDataByWorld;
   }
@@ -326,7 +305,7 @@ public class WildManager implements Listener {
     return currentlyLooking;
   }
 
-  public Wild getPlugin() {
+  public WildPlugin getPlugin() {
     return plugin;
   }
 
@@ -339,5 +318,9 @@ public class WildManager implements Listener {
       }
     }
     return 0;
+  }
+
+  public ForceLoadedSystem getForceLoadedSystem() {
+    return forceLoadedSystem;
   }
 }

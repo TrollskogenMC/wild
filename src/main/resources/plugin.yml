@@ -1,11 +1,13 @@
-api-version: 1.13
-main: com.github.hornta.wild.Wild
+api-version: 1.15
+main: com.github.hornta.wild.WildPlugin
 name: Wild
 version: ${project.version}
 author: hornta
 softdepend:  [WorldBorder, Vault]
 commands:
   wild:
+    aliases:
+      - rtp
 permissions:
   wild.wild:
     default: true
@@ -18,4 +20,6 @@ permissions:
   wild.bypasscharge:
     default: false
   wild.reload:
+    default: op
+  wild.info:
     default: op

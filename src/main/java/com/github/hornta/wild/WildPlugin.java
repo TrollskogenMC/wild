@@ -6,6 +6,7 @@ import com.github.hornta.carbon.config.Configuration;
 import com.github.hornta.carbon.config.ConfigurationBuilder;
 import com.github.hornta.carbon.message.*;
 import com.github.hornta.wild.commands.CommandInfo;
+import com.github.hornta.wild.commands.CommandInfoLoaded;
 import com.github.hornta.wild.commands.CommandWild;
 import com.github.hornta.wild.commands.CommandReload;
 import com.github.hornta.wild.engine.WildManager;
@@ -25,8 +26,8 @@ import java.util.IllegalFormatConversionException;
 import java.util.List;
 import java.util.logging.Level;
 
-public class Wild extends JavaPlugin {
-  private static Wild instance;
+public class WildPlugin extends JavaPlugin {
+  private static WildPlugin instance;
   private WorldBorder worldBorder;
   private Carbon carbon;
   private Configuration configuration;
@@ -34,7 +35,7 @@ public class Wild extends JavaPlugin {
   private Economy economy;
   private WildManager wildManager;
 
-  public static Wild getInstance() {
+  public static WildPlugin getInstance() {
     return instance;
   }
 
@@ -69,7 +70,7 @@ public class Wild extends JavaPlugin {
         .add(ConfigKey.WILD_ON_DEATH_WORLD, "wild_on_death.world", ConfigType.STRING, "@same")
         .add(ConfigKey.WILD_DEFAULT_WORLD, "default_world", ConfigType.STRING, "@same")
         .add(ConfigKey.PERF_BUFFER_SIZE, "performance.buffer_size", ConfigType.INTEGER, 256)
-        .add(ConfigKey.PERF_BUFFER_INTERVAL, "performance.buffer_interval", ConfigType.INTEGER, 20 * 5)
+        .add(ConfigKey.PERF_BUFFER_INTERVAL, "performance.buffer_interval", ConfigType.INTEGER, 20 * 2)
         .add(ConfigKey.PERF_KEEP_BUFFER_LOADED, "performance.keep_buffer_loaded_size", ConfigType.INTEGER, 3)
         .add(ConfigKey.PERF_COMMAND_MAX_TRIES, "performance.command_max_tries", ConfigType.INTEGER, 2)
         .add(ConfigKey.VERBOSE, "verbose", ConfigType.BOOLEAN, false)
@@ -96,6 +97,8 @@ public class Wild extends JavaPlugin {
       .add(MessageKey.WORLD_DISABLED, "world_disabled")
       .add(MessageKey.SEARCHING_ACTION_BAR, "searching")
       .add(MessageKey.INFO, "info")
+      .add(MessageKey.INFO_LOADED, "info_loaded")
+      .add(MessageKey.INFO_LOADED_ITEM, "info_loaded_item")
       .add(MessageKey.TIME_UNIT_SECOND, "timeunit.second")
       .add(MessageKey.TIME_UNIT_SECONDS, "timeunit.seconds")
       .add(MessageKey.TIME_UNIT_MINUTE, "timeunit.minute")
@@ -174,6 +177,11 @@ public class Wild extends JavaPlugin {
       .addCommand("wild info")
       .withHandler(new CommandInfo())
       .requiresPermission("wild.info");
+
+    carbon
+      .addCommand("wild info loaded")
+      .withHandler(new CommandInfoLoaded())
+      .requiresPermission("wild.info.loaded");
   }
 
   @Override
@@ -207,11 +215,11 @@ public class Wild extends JavaPlugin {
   }
 
   public static void debug(String message, Object... args) {
-    if(Wild.getInstance().getConfiguration().get(ConfigKey.VERBOSE)) {
+    if(WildPlugin.getInstance().getConfiguration().get(ConfigKey.VERBOSE)) {
       try {
-        Wild.getInstance().getLogger().info(String.format(message, args));
+        WildPlugin.getInstance().getLogger().info(String.format(message, args));
       } catch (IllegalFormatConversionException e) {
-        Wild.getInstance().getLogger().log(Level.SEVERE, e.getMessage(), e);
+        WildPlugin.getInstance().getLogger().log(Level.SEVERE, e.getMessage(), e);
       }
     }
   }

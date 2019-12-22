@@ -7,9 +7,6 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-/**
- * Called before the search of a random overrideLocation begins
- */
 public class PreTeleportEvent extends Event implements Cancellable {
   private static final HandlerList handlers = new HandlerList();
   private boolean isCancelled;

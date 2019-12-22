@@ -6,7 +6,7 @@
 
     <groupId>com.github.hornta</groupId>
     <artifactId>wild</artifactId>
-    <version>0.11.2</version>
+    <version>0.12.0</version>
 
     <properties>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -82,15 +82,6 @@
                             <outputDirectory>${project.basedir}/server/plugins</outputDirectory>
                             <destFileName>${project.artifactId}-${project.version}.jar</destFileName>
                         </artifactItem>
-                        <artifactItem>
-                            <groupId>${project.groupId}</groupId>
-                            <artifactId>${project.artifactId}</artifactId>
-                            <version>${project.version}</version>
-                            <type>jar</type>
-                            <overWrite>yes</overWrite>
-                            <outputDirectory>${project.basedir}/server_1_13_2/plugins</outputDirectory>
-                            <destFileName>${project.artifactId}-${project.version}.jar</destFileName>
-                        </artifactItem>
                     </artifactItems>
                     <overWriteSnapshots>true</overWriteSnapshots>
                     <overWriteReleases>true</overWriteReleases>
@@ -112,6 +103,10 @@
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
         <repository>
+            <id>papermc</id>
+            <url>https://papermc.io/repo/repository/maven-public/</url>
+        </repository>
+        <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
@@ -124,8 +119,8 @@
     <dependencies>
         <dependency>
             <groupId>org.spigotmc</groupId>
-            <artifactId>spigot</artifactId>
-            <version>1.14.2-R0.1-SNAPSHOT</version>
+            <artifactId>spigot-api</artifactId>
+            <version>1.15.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -150,6 +145,12 @@
             <artifactId>VaultAPI</artifactId>
             <version>1.7</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.papermc</groupId>
+            <artifactId>paperlib</artifactId>
+            <version>1.0.2</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

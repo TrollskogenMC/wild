@@ -1,80 +1,56 @@
 package com.github.hornta.wild;
 
-import com.github.hornta.wild.events.BufferedLocation;
+import com.github.hornta.wild.engine.WildManager;
+import com.github.hornta.wild.events.DropUnsafeLocationEvent;
+import com.github.hornta.wild.events.FoundLocationEvent;
+import com.github.hornta.wild.events.PollLocationEvent;
+import io.papermc.lib.PaperLib;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.util.Vector;
 
-import java.util.*;
+import java.util.LinkedList;
 
-public class BufferLocationTask extends BukkitRunnable {
+public class ProcessQueueTask extends BukkitRunnable {
   private final WildManager wildManager;
-  private final Random random;
 
-  BufferLocationTask(WildManager wildManager) {
+  public ProcessQueueTask(WildManager wildManager) {
     this.wildManager = wildManager;
-    this.random = new Random();
   }
 
   @Override
   public void run() {
-    Optional<Map.Entry<World, List<Location>>> worldLocation = wildManager
-      .getLocationsByWorld()
-      .entrySet()
-      .stream()
-      .min(Comparator.comparingInt((Map.Entry<World, List<Location>> a) -> a.getValue().size()));
-    if(!worldLocation.isPresent()) {
+    PlayerSearch search = wildManager.getCurrentlyLooking().peek();
+    if(search == null) {
       return;
     }
 
-    World world = worldLocation.get().getKey();
-    LookupData lookup = wildManager.getLookupDataByWorld().get(worldLocation.get().getKey());
-
-    double randX;
-    double randZ;
-
-    Location loc;
-    if (lookup.isRound()) {
-      double a = random.nextDouble() * 2 * Math.PI;
-      double r = Math.min(lookup.getRadiusX(), lookup.getRadiusZ()) * Math.sqrt(random.nextDouble());
-      randX = r * Math.cos(a) + lookup.getCenterX();
-      randZ = r * Math.sin(a) + lookup.getCenterZ();
-    } else {
-      randX = Util.randInt(
-        lookup.getCenterX() - lookup.getRadiusX() + 1,
-        lookup.getCenterX() + lookup.getRadiusX() - 1
-      );
-      randZ = Util.randInt(
-        lookup.getCenterZ() - lookup.getRadiusZ() + 1,
-        lookup.getCenterZ() + lookup.getRadiusZ() - 1
-      );
-    }
-
-    loc = new Location(
-      world,
-      (int) randX,
-      world.getHighestBlockYAt((int) randX, (int) randZ),
-      (int) randZ
-    ).add(new Vector(0.5, 0, 0.5));
-
-    if (lookup.getWbBorderData() != null && !lookup.getWbBorderData().insideBorder(loc)) {
+    WildPlugin.debug("%s is search for a location in world %s caused by %s", Bukkit.getPlayer(search.getUuid()).getName(), search.getWorld().getName(), search.getCause());
+    LinkedList<Location> locations = wildManager.getLocations(search.getWorld());
+    Location location = locations.poll();
+    if(location == null) {
+      WildPlugin.debug("Location not found... skipping");
       return;
     }
 
-    if (!world.getWorldBorder().isInside(loc)) {
-      return;
-    }
+    Bukkit.getPluginManager().callEvent(new PollLocationEvent(location));
 
-    if (!Util.isSafeStandBlock(loc.getBlock())) {
-      return;
-    }
+    PaperLib.getChunkAtAsync(location).thenAccept((Chunk c) -> {
+      Bukkit.getScheduler().runTaskLater(wildManager.getPlugin(), () -> {
+        Block highestBlock = location.getWorld().getHighestBlockAt((int)location.getX(), (int)location.getZ());
+        if(!Util.isSafeStandBlock(highestBlock)) {
+          search.incrementTries();
+          DropUnsafeLocationEvent drop = new DropUnsafeLocationEvent(search, highestBlock.getLocation());
+          Bukkit.getPluginManager().callEvent(drop);
+          return;
+        }
+        wildManager.getCurrentlyLooking().poll();
 
-    Location finalLocation = Util.findSpaceBelow(loc);
-    if(finalLocation != null) {
-      worldLocation.get().getValue().add(finalLocation);
-      Bukkit.getPluginManager().callEvent(new BufferedLocation());
-    }
+        FoundLocationEvent event = new FoundLocationEvent(search, location);
+        Bukkit.getPluginManager().callEvent(event);
+      }, 0);
+    });
   }
 }
