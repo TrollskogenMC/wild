@@ -21,6 +21,7 @@ public class CommandReload implements ICommandHandler {
 
     Bukkit.getPluginManager().callEvent(new ConfigReloadedEvent());
 
+    WildPlugin.getInstance().getTranslations().saveDefaults();
     Translation translation = WildPlugin.getInstance().getTranslations().createTranslation(WildPlugin.getInstance().getConfiguration().get(ConfigKey.LANGUAGE));
     MessageManager.getInstance().setPrimaryTranslation(translation);
     MessageManager.sendMessage(commandSender, MessageKey.CONFIGURATION_RELOADED);
