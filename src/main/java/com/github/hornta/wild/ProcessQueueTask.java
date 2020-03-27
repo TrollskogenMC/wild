@@ -40,14 +40,16 @@ public class ProcessQueueTask extends BukkitRunnable {
     PaperLib.getChunkAtAsync(location).thenAccept((Chunk c) -> {
       Bukkit.getScheduler().runTaskLater(wildManager.getPlugin(), () -> {
         Block highestBlock = location.getWorld().getHighestBlockAt((int)location.getX(), (int)location.getZ());
-        if(!Util.isSafeStandBlock(highestBlock)) {
+        try {
+          Util.isSafeStandBlock(highestBlock);
+        } catch (Exception e) {
+          WildPlugin.debug("Block %s at %s is no longer safe to stand on. Reason: %s", highestBlock.getType().name(), highestBlock.getLocation(), e.getMessage());
           search.incrementTries();
           DropUnsafeLocationEvent drop = new DropUnsafeLocationEvent(search, highestBlock.getLocation());
           Bukkit.getPluginManager().callEvent(drop);
           return;
         }
         wildManager.getCurrentlyLooking().poll();
-
         FoundLocationEvent event = new FoundLocationEvent(search, location);
         Bukkit.getPluginManager().callEvent(event);
       }, 0);

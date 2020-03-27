@@ -153,15 +153,41 @@ public class Util {
     return random.nextInt(max - min + 1) + min;
   }
 
-  public static boolean isSafeStandBlock(Block block) {
-    return
-      block.getWorld().getWorldBorder().isInside(block.getLocation()) &&
-      !bannedMaterials.contains(block.getType()) &&
-      !bannedMaterials.contains(block.getRelative(BlockFace.DOWN).getType()) &&
-      !bannedMaterials.contains(block.getRelative(BlockFace.UP).getType());
+  public static void isSafeStandBlock(Block block) throws Exception {
+    //Material below = block.getRelative(BlockFace.DOWN).getType();
+    Material current = block.getType();
+    Material above = block.getRelative(BlockFace.UP).getType();
+
+    boolean isInsideWorldBorder = block.getWorld().getWorldBorder().isInside(block.getLocation());
+    //boolean isSafeBelow = !bannedMaterials.contains(below);
+    boolean isSafe = !bannedMaterials.contains(current);
+    boolean isSafeAbove = !bannedMaterials.contains(above);
+
+    if(!isInsideWorldBorder) {
+      throw new Exception("Is not inside the world border");
+    }
+
+    //if(!isSafeBelow) {
+    //  throw new Exception(String.format("Below block %s is not safe", below.name()));
+    //}
+
+    if(!isSafe) {
+      throw new Exception(String.format("Block %s is not safe", current.name()));
+    }
+
+    if(!isSafeAbove) {
+      throw new Exception(String.format("Above block %s is not safe", above.name()));
+    }
   }
 
   public static Location findSpaceBelow(Location location) {
+    int dropHeight = WildPlugin.getInstance().getConfiguration().get(ConfigKey.DROP_FROM_ABOVE_HEIGHT);
+
+    // disable finding space below when dropHeight is not set to zero to reduce eventual bugs
+    if(dropHeight > 0) {
+      return location;
+    }
+
     Block currentCheck = location.getWorld().getBlockAt(location);
     int airHeight = 0;
 
@@ -177,14 +203,18 @@ public class Util {
       Block aboveBlock = currentCheck;
       currentCheck = currentCheck.getRelative(BlockFace.DOWN);
 
-      if (
-        !findBelow.contains(currentCheck.getType()) &&
-          currentCheck.getType().isSolid() &&
-          airHeight >= 2 &&
-          isSafeStandBlock(aboveBlock) &&
-          aboveBlock.getLightFromSky() > 7
-      ) {
-        return aboveBlock.getLocation().add(new Vector(0.5, 0, 0.5));
+      try {
+        isSafeStandBlock(aboveBlock);
+        if (
+          !findBelow.contains(currentCheck.getType()) &&
+            currentCheck.getType().isSolid() &&
+            airHeight >= 2 &&
+            aboveBlock.getLightFromSky() > 7
+        ) {
+          return aboveBlock.getLocation().add(new Vector(0.5, 0, 0.5));
+        }
+      } catch (Exception e) {
+        return location;
       }
     }
 

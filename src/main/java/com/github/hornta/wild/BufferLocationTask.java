@@ -29,6 +29,7 @@ public class BufferLocationTask extends BukkitRunnable {
       .stream()
       .min(Comparator.comparingInt((Map.Entry<World, LinkedList<Location>> a) -> a.getValue().size()));
     if(!worldLocation.isPresent()) {
+      WildPlugin.debug("Didn't find any suitable world.");
       return;
     }
 
@@ -66,21 +67,28 @@ public class BufferLocationTask extends BukkitRunnable {
       Bukkit.getScheduler().runTaskLater(wildManager.getPlugin(), () -> {
         int y = world.getHighestBlockYAt((int) randX, (int) randZ);
         loc.setY(y);
+        WildPlugin.debug("Found block %s at %s", loc.getBlock().getType().name(), loc);
 
         if (lookup.getWbBorderData() != null && !lookup.getWbBorderData().insideBorder(loc)) {
+          WildPlugin.debug("Block is outside of WorldBorder border");
           return;
         }
 
-        if (!Util.isSafeStandBlock(loc.getBlock())) {
+        try {
+          Util.isSafeStandBlock(loc.getBlock());
+        } catch (Exception e) {
+          WildPlugin.debug("Block %s at %s is not safe to stand on. Reason: %s", loc.getBlock().getType().name(), loc.getBlock().getLocation(), e.getMessage());
           return;
         }
 
         Location finalLocation = Util.findSpaceBelow(loc);
         if(finalLocation != null) {
-          WildPlugin.debug("Found location %s", loc);
+          WildPlugin.debug("Save block %s at %s", loc.getBlock().getType().name(), loc);
           worldLocation.get().getValue().offer(finalLocation);
           BufferedLocationEvent event = new BufferedLocationEvent(finalLocation);
           Bukkit.getPluginManager().callEvent(event);
+        } else {
+          WildPlugin.debug("Didn't find location after finding space below");
         }
       }, 0);
     });

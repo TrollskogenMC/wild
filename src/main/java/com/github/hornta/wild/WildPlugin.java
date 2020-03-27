@@ -74,11 +74,11 @@ public class WildPlugin extends JavaPlugin {
         .add(ConfigKey.PERF_KEEP_BUFFER_LOADED, "performance.keep_buffer_loaded_size", ConfigType.INTEGER, 3)
         .add(ConfigKey.PERF_COMMAND_MAX_TRIES, "performance.command_max_tries", ConfigType.INTEGER, 2)
         .add(ConfigKey.VERBOSE, "verbose", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.DROP_FROM_ABOVE_HEIGHT, "drop_from_above_height", ConfigType.INTEGER, 0)
         .build();
     } catch (Exception e) {
       setEnabled(false);
       getLogger().log(Level.SEVERE, e.getMessage(), e);
-      return;
     }
 
     MessageManager messageManager = new MessagesBuilder()

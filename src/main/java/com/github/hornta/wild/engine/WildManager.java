@@ -206,13 +206,20 @@ public class WildManager implements Listener {
     if(event.getSearch().getCause() == TeleportCause.COMMAND) {
       teleportCause = PlayerTeleportEvent.TeleportCause.COMMAND;
     }
-    player.teleport(event.getLocation(), teleportCause);
+
+    int dropHeight = WildPlugin.getInstance().getConfiguration().get(ConfigKey.DROP_FROM_ABOVE_HEIGHT);
+    Location actualTeleportLocation = event.getLocation().clone().add(0, 1, 0);
+    if(dropHeight > 0) {
+      actualTeleportLocation.setY(actualTeleportLocation.getY() + dropHeight);
+    }
+
+    player.teleport(actualTeleportLocation, teleportCause);
     player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
     if(event.getSearch().getCause() == TeleportCause.COMMAND) {
       player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(""));
       playerCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + (int) WildPlugin.getInstance().getConfiguration().get(ConfigKey.COOLDOWN) * 1000);
     }
-    TeleportEvent teleportEvent = new TeleportEvent(event.getLocation(), TeleportCause.COMMAND, player);
+    TeleportEvent teleportEvent = new TeleportEvent(actualTeleportLocation, TeleportCause.COMMAND, player);
     Bukkit.getPluginManager().callEvent(teleportEvent);
   }
 

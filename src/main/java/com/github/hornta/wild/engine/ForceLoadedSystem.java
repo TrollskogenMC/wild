@@ -39,13 +39,15 @@ public class ForceLoadedSystem implements Listener {
 
   @EventHandler
   void onPollLocation(PollLocationEvent event) {
-    ticketsByChunk.get(event.getLocation().getChunk()).remove(event.getLocation());
-    if(ticketsByChunk.get(event.getLocation().getChunk()).size() == 1) {
-      event.getLocation().getChunk().removePluginChunkTicket(wildPlugin);
-    } else if (ticketsByChunk.get(event.getLocation().getChunk()).isEmpty()) {
-      ticketsByChunk.remove(event.getLocation().getChunk());
+    Location location = event.getLocation();
+    Chunk chunk = location.getChunk();
+    World world = location.getWorld();
+    ticketsByChunk.get(chunk).remove(location);
+    if(ticketsByChunk.get(chunk).isEmpty()) {
+      chunk.removePluginChunkTicket(wildPlugin);
+      ticketsByChunk.remove(chunk);
     }
-    LinkedList<Location> locations = wildManager.getLocations(event.getLocation().getWorld());
+    LinkedList<Location> locations = wildManager.getLocations(world);
     if(locations.size() < maxNumKeepLoaded) {
       return;
     }
@@ -58,10 +60,9 @@ public class ForceLoadedSystem implements Listener {
   @EventHandler(priority = EventPriority.LOW)
   void onConfigReloaded(ConfigReloadedEvent event) {
     for(Map.Entry<World, LinkedList<Location>> entry : wildManager.getLocationsByWorld().entrySet()) {
-      for(Location location : entry.getValue()) {
-        location.getChunk().removePluginChunkTicket(wildPlugin);
-      }
+      entry.getKey().removePluginChunkTickets(wildPlugin);
     }
+
     ticketsByChunk.clear();
     maxNumKeepLoaded = wildPlugin.getConfiguration().get(ConfigKey.PERF_KEEP_BUFFER_LOADED);
   }
