@@ -5,6 +5,7 @@ import com.github.hornta.carbon.message.MessageManager;
 import com.github.hornta.wild.ConfigKey;
 import com.github.hornta.wild.MessageKey;
 import com.github.hornta.wild.WildPlugin;
+import com.github.hornta.wild.WorldUnit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -24,10 +25,9 @@ public class CommandInfo implements ICommandHandler {
       WildPlugin
         .getInstance()
         .getWildManager()
-        .getLocationsByWorld()
-        .entrySet()
+        .getWorldUnits()
         .stream()
-        .map((Map.Entry<World, LinkedList<Location>> entry) -> entry.getKey().getName() + ": " + entry.getValue().size())
+        .map((WorldUnit worldUnit) -> worldUnit.getWorld().getName() + ": " + worldUnit.getLocations().size())
         .collect(Collectors.joining(", "))
     );
     MessageManager.setValue(
@@ -35,9 +35,9 @@ public class CommandInfo implements ICommandHandler {
       WildPlugin
         .getInstance()
         .getWildManager()
-        .getLocationsByWorld()
-        .keySet()
+        .getWorldUnits()
         .stream()
+        .map((WorldUnit::getWorld))
         .filter((World world) -> world.getPluginChunkTickets().get(WildPlugin.getInstance()) != null)
         .map((World world) -> world.getName() + ": " + world.getPluginChunkTickets().get(WildPlugin.getInstance()).size())
         .collect(Collectors.joining(", "))

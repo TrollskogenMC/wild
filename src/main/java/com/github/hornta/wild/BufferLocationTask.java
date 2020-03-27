@@ -2,6 +2,7 @@ package com.github.hornta.wild;
 
 import com.github.hornta.wild.engine.WildManager;
 import com.github.hornta.wild.events.BufferedLocationEvent;
+import com.github.hornta.wild.events.UnsafeLocationFoundEvent;
 import io.papermc.lib.PaperLib;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -23,23 +24,25 @@ public class BufferLocationTask extends BukkitRunnable {
 
   @Override
   public void run() {
-    Optional<Map.Entry<World, LinkedList<Location>>> worldLocation = wildManager
-      .getLocationsByWorld()
-      .entrySet()
+    Optional<WorldUnit> worldUnit = wildManager
+      .getWorldUnits()
       .stream()
-      .min(Comparator.comparingInt((Map.Entry<World, LinkedList<Location>> a) -> a.getValue().size()));
-    if(!worldLocation.isPresent()) {
+      .min(Comparator.comparingInt((WorldUnit wu) -> wu.getLookups()));
+
+    if(!worldUnit.isPresent()) {
       WildPlugin.debug("Didn't find any suitable world.");
       return;
     }
 
-    if(worldLocation.get().getValue().size() >= (int)wildManager.getPlugin().getConfiguration().get(ConfigKey.PERF_BUFFER_SIZE)) {
+    if(worldUnit.get().getLocations().size() >= (int)wildManager.getPlugin().getConfiguration().get(ConfigKey.PERF_BUFFER_SIZE)) {
       WildPlugin.debug("Reached maximum buffer size");
       return;
     }
 
-    World world = worldLocation.get().getKey();
-    LookupData lookup = wildManager.getLookupDataByWorld().get(worldLocation.get().getKey());
+    worldUnit.get().increaseLookups();
+
+    World world = worldUnit.get().getWorld();
+    LookupData lookup = worldUnit.get().getLookupData();
 
     double randX;
     double randZ;
@@ -70,6 +73,8 @@ public class BufferLocationTask extends BukkitRunnable {
         WildPlugin.debug("Found block %s at %s", loc.getBlock().getType().name(), loc);
 
         if (lookup.getWbBorderData() != null && !lookup.getWbBorderData().insideBorder(loc)) {
+          UnsafeLocationFoundEvent event = new UnsafeLocationFoundEvent(worldUnit.get());
+          Bukkit.getPluginManager().callEvent(event);
           WildPlugin.debug("Block is outside of WorldBorder border");
           return;
         }
@@ -78,17 +83,22 @@ public class BufferLocationTask extends BukkitRunnable {
           Util.isSafeStandBlock(loc.getBlock());
         } catch (Exception e) {
           WildPlugin.debug("Block %s at %s is not safe to stand on. Reason: %s", loc.getBlock().getType().name(), loc.getBlock().getLocation(), e.getMessage());
+          UnsafeLocationFoundEvent event = new UnsafeLocationFoundEvent(worldUnit.get());
+          Bukkit.getPluginManager().callEvent(event);
           return;
         }
 
         Location finalLocation = Util.findSpaceBelow(loc);
         if(finalLocation != null) {
           WildPlugin.debug("Save block %s at %s", loc.getBlock().getType().name(), loc);
-          worldLocation.get().getValue().offer(finalLocation);
+          worldUnit.get().getLocations().offer(finalLocation);
+          worldUnit.get().increaseSafeLookups();
           BufferedLocationEvent event = new BufferedLocationEvent(finalLocation);
           Bukkit.getPluginManager().callEvent(event);
         } else {
           WildPlugin.debug("Didn't find location after finding space below");
+          UnsafeLocationFoundEvent event = new UnsafeLocationFoundEvent(worldUnit.get());
+          Bukkit.getPluginManager().callEvent(event);
         }
       }, 0);
     });

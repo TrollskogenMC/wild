@@ -2,6 +2,7 @@ package com.github.hornta.wild.engine;
 
 import com.github.hornta.wild.ConfigKey;
 import com.github.hornta.wild.WildPlugin;
+import com.github.hornta.wild.WorldUnit;
 import com.github.hornta.wild.events.BufferedLocationEvent;
 import com.github.hornta.wild.events.ConfigReloadedEvent;
 import com.github.hornta.wild.events.PollLocationEvent;
@@ -29,8 +30,8 @@ public class ForceLoadedSystem implements Listener {
 
   @EventHandler(ignoreCancelled = true)
   void onBufferedLocation(BufferedLocationEvent event) {
-    Queue<Location> locations = wildManager.getLocations(event.getLocation().getWorld());
-    if(locations.size() <= maxNumKeepLoaded) {
+    WorldUnit worldUnit = wildManager.getWorldUnitByWorld(event.getLocation().getWorld());
+    if(worldUnit.getLocations().size() <= maxNumKeepLoaded) {
       event.getLocation().getChunk().addPluginChunkTicket(wildPlugin);
       ticketsByChunk.putIfAbsent(event.getLocation().getChunk(), new HashSet<>());
       ticketsByChunk.get(event.getLocation().getChunk()).add(event.getLocation());
@@ -47,11 +48,11 @@ public class ForceLoadedSystem implements Listener {
       chunk.removePluginChunkTicket(wildPlugin);
       ticketsByChunk.remove(chunk);
     }
-    LinkedList<Location> locations = wildManager.getLocations(world);
-    if(locations.size() < maxNumKeepLoaded) {
+    WorldUnit worldUnit = wildManager.getWorldUnitByWorld(world);
+    if(worldUnit.getLocations().size() < maxNumKeepLoaded) {
       return;
     }
-    Location loc = locations.get(maxNumKeepLoaded - 1);
+    Location loc = worldUnit.getLocations().get(maxNumKeepLoaded - 1);
     loc.getChunk().addPluginChunkTicket(wildPlugin);
     ticketsByChunk.putIfAbsent(loc.getChunk(), new HashSet<>());
     ticketsByChunk.get(loc.getChunk()).add(loc);
@@ -59,8 +60,8 @@ public class ForceLoadedSystem implements Listener {
 
   @EventHandler(priority = EventPriority.LOW)
   void onConfigReloaded(ConfigReloadedEvent event) {
-    for(Map.Entry<World, LinkedList<Location>> entry : wildManager.getLocationsByWorld().entrySet()) {
-      entry.getKey().removePluginChunkTickets(wildPlugin);
+    for(WorldUnit worldUnit : wildManager.getWorldUnits()) {
+      worldUnit.getWorld().removePluginChunkTickets(wildPlugin);
     }
 
     ticketsByChunk.clear();

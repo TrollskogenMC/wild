@@ -11,7 +11,6 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.LinkedList;
 
 public class ProcessQueueTask extends BukkitRunnable {
   private final WildManager wildManager;
@@ -27,9 +26,9 @@ public class ProcessQueueTask extends BukkitRunnable {
       return;
     }
 
-    WildPlugin.debug("%s is search for a location in world %s caused by %s", Bukkit.getPlayer(search.getUuid()).getName(), search.getWorld().getName(), search.getCause());
-    LinkedList<Location> locations = wildManager.getLocations(search.getWorld());
-    Location location = locations.poll();
+    WildPlugin.debug("%s is searching for a location in world %s caused by %s", Bukkit.getPlayer(search.getUuid()).getName(), search.getWorld().getName(), search.getCause());
+    WorldUnit worldUnit = wildManager.getWorldUnitByWorld(search.getWorld());
+    Location location = worldUnit.getLocations().poll();
     if(location == null) {
       WildPlugin.debug("Location not found... skipping");
       return;

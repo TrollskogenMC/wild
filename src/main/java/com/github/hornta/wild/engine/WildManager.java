@@ -3,8 +3,6 @@ package com.github.hornta.wild.engine;
 import com.github.hornta.carbon.message.MessageManager;
 import com.github.hornta.wild.*;
 import com.github.hornta.wild.events.*;
-import com.wimbli.WorldBorder.BorderData;
-import com.wimbli.WorldBorder.Config;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.milkbowl.vault.economy.EconomyResponse;
@@ -29,8 +27,8 @@ import java.util.*;
 
 public class WildManager implements Listener {
   private WildPlugin plugin;
-  private Map<World, LinkedList<Location>> locationsByWorld;
-  private Map<World, LookupData> lookupDataByWorld;
+  private List<WorldUnit> worldUnits;
+  private Map<World, WorldUnit> worldUnitsByWorld;
   private LinkedList<PlayerSearch> currentlyLooking;
   private Map<UUID, Long> immortals;
   private HashMap<UUID, Long> playerCooldowns;
@@ -40,8 +38,8 @@ public class WildManager implements Listener {
 
   public WildManager(WildPlugin wildPlugin) {
     this.plugin = wildPlugin;
-    locationsByWorld = new HashMap<>();
-    lookupDataByWorld = new HashMap<>();
+    worldUnits = new ArrayList<>();
+    worldUnitsByWorld = new HashMap<>();
     currentlyLooking = new LinkedList<>();
     immortals = new HashMap<>();
     playerCooldowns = new HashMap<>();
@@ -62,8 +60,8 @@ public class WildManager implements Listener {
 
   @EventHandler
   void onWorldUnload(WorldUnloadEvent event) {
-    locationsByWorld.remove(event.getWorld());
-    lookupDataByWorld.remove(event.getWorld());
+    worldUnits.removeIf((WorldUnit worldUnit) -> event.getWorld() == worldUnit.getWorld());
+    worldUnitsByWorld.remove(event.getWorld());
     currentlyLooking.removeIf((PlayerSearch search) -> search.getWorld().equals(event.getWorld()));
   }
 
@@ -150,8 +148,8 @@ public class WildManager implements Listener {
 
   @EventHandler
   void onConfigReloaded(ConfigReloadedEvent event) {
-    locationsByWorld.clear();
-    lookupDataByWorld.clear();
+    worldUnits.clear();
+    worldUnitsByWorld.clear();
 
     int newBufferInterval = plugin.getConfiguration().get(ConfigKey.PERF_BUFFER_INTERVAL);
     if(bufferInterval != newBufferInterval) {
@@ -168,9 +166,10 @@ public class WildManager implements Listener {
   @EventHandler
   void onRequestLocation(RequestLocationEvent event) {
     WildPlugin.debug("%s request location caused by %s", Bukkit.getPlayer(event.getSearch().getUuid()).getName(), event.getSearch().getCause());
-    for(PlayerSearch search : currentlyLooking) {
-      if(search.getUuid().equals(event.getSearch().getUuid())) {
-        WildPlugin.debug("%s is already looking for a location, skipping...", Bukkit.getPlayer(event.getSearch().getUuid()).getName());
+    for(int i = 0; i < currentlyLooking.size(); ++i) {
+      if(currentlyLooking.get(i).getUuid().equals(event.getSearch().getUuid())) {
+        currentlyLooking.set(i, event.getSearch());
+        WildPlugin.debug("%s is already looking for a location. Replacing PlayerSearch..", Bukkit.getPlayer(event.getSearch().getUuid()).getName());
         return;
       }
     }
@@ -234,6 +233,29 @@ public class WildManager implements Listener {
     }
   }
 
+  @EventHandler
+  void onUnsafeLocationFound(UnsafeLocationFoundEvent event) {
+    int lookups = event.getWorldUnit().getLookups();
+    int safeLookups = event.getWorldUnit().getSafeLookups();
+    float failedLookups = (float)safeLookups / lookups;
+    if (failedLookups <= 0.5f && lookups >= 10) {
+       WildPlugin.getInstance().getLogger().warning(
+         String.format(
+           "The world `%s` has at least 50%% failed lookups.\n" +
+           "Consider disabling this world if you do not wish for Wild to find locations in this world.\n" +
+           "By disabling this world the performance will increase in other overworld worlds.\n" +
+           "Also consider disabling all the overworld worlds do you not wish Wild to function in. \n" +
+           "By default Wild will find and store locations in ALL your overworld worlds\n" +
+           "and most of the time you would only want your players to be using wild in 1 world.\n\n" +
+           "https://github.com/hornta/wild/wiki/Configuration#user-content-disabled_worlds\n" +
+           "If you want to know more you are welcome to ask questions in my Discord support server:\n" +
+           "https://discord.gg/7fz5dvF",
+           event.getWorldUnit().getWorld().getName()
+         )
+       );
+    }
+  }
+
   private void acceptWorld(World world) {
     if(world.getEnvironment() != World.Environment.NORMAL) {
       return;
@@ -248,64 +270,17 @@ public class WildManager implements Listener {
 
     WildPlugin.debug("Accepting world %s", world.getName());
 
-    locationsByWorld.put(world, new LinkedList<>());
-
-    boolean isRound;
-    BorderData borderData = null;
-    int centerX;
-    int centerZ;
-    int radiusX;
-    int radiusZ;
-
-    if (WildPlugin.getInstance().getWorldBorder() != null) {
-      borderData = Config.getBorders().getOrDefault(world.getName(), null);
-    }
-
-    if (borderData != null) {
-      centerX = (int) Math.floor(borderData.getX());
-      centerZ = (int) Math.floor(borderData.getZ());
-      radiusX = borderData.getRadiusX();
-      radiusZ = borderData.getRadiusZ();
-      if(borderData.getShape() != null) {
-        isRound = borderData.getShape();
-      } else {
-        isRound = false;
-      }
-    } else if (WildPlugin.getInstance().getConfiguration().get(ConfigKey.USE_VANILLA_WORLD_BORDER)) {
-      centerX = world.getWorldBorder().getCenter().getBlockX();
-      centerZ = world.getWorldBorder().getCenter().getBlockZ();
-      radiusX = (int) Math.ceil(world.getWorldBorder().getSize() / 2);
-      radiusZ = (int) Math.ceil(world.getWorldBorder().getSize() / 2);
-      isRound = false;
-    } else {
-      centerX = world.getSpawnLocation().getBlockX();
-      centerZ = world.getSpawnLocation().getBlockZ();
-      radiusX = WildPlugin.getInstance().getConfiguration().get(ConfigKey.NO_BORDER_SIZE);
-      radiusZ = WildPlugin.getInstance().getConfiguration().get(ConfigKey.NO_BORDER_SIZE);
-      isRound = false;
-    }
-
-    LookupData lookupData = new LookupData(
-      isRound,
-      borderData,
-      centerX,
-      centerZ,
-      radiusX,
-      radiusZ
-    );
-    lookupDataByWorld.put(world, lookupData);
+    WorldUnit worldUnit = new WorldUnit(world);
+    worldUnits.add(worldUnit);
+    worldUnitsByWorld.put(world, worldUnit);
   }
 
-  public Map<World, LinkedList<Location>> getLocationsByWorld() {
-    return locationsByWorld;
+  public List<WorldUnit> getWorldUnits() {
+    return worldUnits;
   }
 
-  public LinkedList<Location> getLocations(World world) {
-    return locationsByWorld.get(world);
-  }
-
-  public Map<World, LookupData> getLookupDataByWorld() {
-    return lookupDataByWorld;
+  public WorldUnit getWorldUnitByWorld(World world) {
+    return worldUnitsByWorld.get(world);
   }
 
   public Queue<PlayerSearch> getCurrentlyLooking() {
