@@ -154,22 +154,16 @@ public class Util {
   }
 
   public static void isSafeStandBlock(Block block) throws Exception {
-    //Material below = block.getRelative(BlockFace.DOWN).getType();
     Material current = block.getType();
     Material above = block.getRelative(BlockFace.UP).getType();
 
     boolean isInsideWorldBorder = block.getWorld().getWorldBorder().isInside(block.getLocation());
-    //boolean isSafeBelow = !bannedMaterials.contains(below);
     boolean isSafe = !bannedMaterials.contains(current);
     boolean isSafeAbove = !bannedMaterials.contains(above);
 
     if(!isInsideWorldBorder) {
       throw new Exception("Is not inside the world border");
     }
-
-    //if(!isSafeBelow) {
-    //  throw new Exception(String.format("Below block %s is not safe", below.name()));
-    //}
 
     if(!isSafe) {
       throw new Exception(String.format("Block %s is not safe", current.name()));
@@ -211,7 +205,7 @@ public class Util {
             airHeight >= 2 &&
             aboveBlock.getLightFromSky() > 7
         ) {
-          return aboveBlock.getLocation().add(new Vector(0.5, 0, 0.5));
+          return currentCheck.getLocation().add(new Vector(0.5, 0, 0.5));
         }
       } catch (Exception e) {
         return location;

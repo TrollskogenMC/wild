@@ -6,12 +6,9 @@ import com.github.hornta.wild.ConfigKey;
 import com.github.hornta.wild.MessageKey;
 import com.github.hornta.wild.WildPlugin;
 import com.github.hornta.wild.WorldUnit;
-import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 
-import java.util.LinkedList;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CommandInfo implements ICommandHandler {
@@ -27,7 +24,7 @@ public class CommandInfo implements ICommandHandler {
         .getWildManager()
         .getWorldUnits()
         .stream()
-        .map((WorldUnit worldUnit) -> worldUnit.getWorld().getName() + ": " + worldUnit.getLocations().size())
+        .map((WorldUnit worldUnit) -> worldUnit.getWorld().getName() + ": " + worldUnit.getLocations().size() + ", " + worldUnit.getLookups() + ", " + worldUnit.getUnsafeLookups())
         .collect(Collectors.joining(", "))
     );
     MessageManager.setValue(

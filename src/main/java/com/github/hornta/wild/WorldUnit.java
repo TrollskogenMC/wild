@@ -9,14 +9,14 @@ public class WorldUnit {
   private World world;
   private LinkedList<Location> locations;
   private int lookups;
-  private int safeLookups;
+  private int unsafeLookups;
   private LookupData lookupData;
 
   public WorldUnit(World world) {
     this.world = world;
     this.locations = new LinkedList<>();
     this.lookups = 0;
-    this.safeLookups = 0;
+    this.unsafeLookups = 0;
     this.lookupData = LookupData.createLookup(world);
   }
 
@@ -32,16 +32,20 @@ public class WorldUnit {
     return lookups;
   }
 
-  public int getSafeLookups() {
-    return safeLookups;
+  public int getUnsafeLookups() {
+    return unsafeLookups;
   }
 
   public void increaseLookups() {
     lookups += 1;
   }
 
-  public void increaseSafeLookups() {
-    safeLookups += 1;
+  public void increaseUnsafeLookups() {
+    unsafeLookups += 1;
+  }
+
+  public void resetUnsafeLookups() {
+    unsafeLookups = 0;
   }
 
   public LookupData getLookupData() {

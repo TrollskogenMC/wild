@@ -9,6 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 
@@ -38,6 +39,13 @@ public class ProcessQueueTask extends BukkitRunnable {
 
     PaperLib.getChunkAtAsync(location).thenAccept((Chunk c) -> {
       Bukkit.getScheduler().runTaskLater(wildManager.getPlugin(), () -> {
+        Player player = Bukkit.getPlayer(search.getUuid());
+
+        // this check is necessary because a player might have disconnected right after the search was picked above
+        if (player == null) {
+          return;
+        }
+
         Block highestBlock = location.getWorld().getHighestBlockAt((int)location.getX(), (int)location.getZ());
         try {
           Util.isSafeStandBlock(highestBlock);

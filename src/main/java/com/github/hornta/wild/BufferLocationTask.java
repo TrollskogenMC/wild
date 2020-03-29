@@ -89,17 +89,12 @@ public class BufferLocationTask extends BukkitRunnable {
         }
 
         Location finalLocation = Util.findSpaceBelow(loc);
-        if(finalLocation != null) {
-          WildPlugin.debug("Save block %s at %s", loc.getBlock().getType().name(), loc);
-          worldUnit.get().getLocations().offer(finalLocation);
-          worldUnit.get().increaseSafeLookups();
-          BufferedLocationEvent event = new BufferedLocationEvent(finalLocation);
-          Bukkit.getPluginManager().callEvent(event);
-        } else {
-          WildPlugin.debug("Didn't find location after finding space below");
-          UnsafeLocationFoundEvent event = new UnsafeLocationFoundEvent(worldUnit.get());
-          Bukkit.getPluginManager().callEvent(event);
-        }
+        WildPlugin.debug("Save block %s at %s", finalLocation.getBlock().getType().name(), finalLocation);
+        finalLocation.add(0, 1, 0);
+        worldUnit.get().getLocations().offer(finalLocation);
+        worldUnit.get().resetUnsafeLookups();
+        BufferedLocationEvent event = new BufferedLocationEvent(finalLocation);
+        Bukkit.getPluginManager().callEvent(event);
       }, 0);
     });
   }

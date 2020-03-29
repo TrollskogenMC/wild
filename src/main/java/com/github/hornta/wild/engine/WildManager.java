@@ -150,6 +150,8 @@ public class WildManager implements Listener {
   void onConfigReloaded(ConfigReloadedEvent event) {
     worldUnits.clear();
     worldUnitsByWorld.clear();
+    playerCooldowns.clear();
+    currentlyLooking.clear();
 
     int newBufferInterval = plugin.getConfiguration().get(ConfigKey.PERF_BUFFER_INTERVAL);
     if(bufferInterval != newBufferInterval) {
@@ -207,7 +209,7 @@ public class WildManager implements Listener {
     }
 
     int dropHeight = WildPlugin.getInstance().getConfiguration().get(ConfigKey.DROP_FROM_ABOVE_HEIGHT);
-    Location actualTeleportLocation = event.getLocation().clone().add(0, 1, 0);
+    Location actualTeleportLocation = event.getLocation();
     if(dropHeight > 0) {
       actualTeleportLocation.setY(actualTeleportLocation.getY() + dropHeight);
     }
@@ -235,21 +237,12 @@ public class WildManager implements Listener {
 
   @EventHandler
   void onUnsafeLocationFound(UnsafeLocationFoundEvent event) {
-    int lookups = event.getWorldUnit().getLookups();
-    int safeLookups = event.getWorldUnit().getSafeLookups();
-    float failedLookups = (float)safeLookups / lookups;
-    if (failedLookups <= 0.5f && lookups >= 10) {
+    event.getWorldUnit().increaseUnsafeLookups();
+    int unsafeLookups = event.getWorldUnit().getUnsafeLookups();
+    if (unsafeLookups >= 50) {
        WildPlugin.getInstance().getLogger().warning(
          String.format(
-           "The world `%s` has at least 50%% failed lookups.\n" +
-           "Consider disabling this world if you do not wish for Wild to find locations in this world.\n" +
-           "By disabling this world the performance will increase in other overworld worlds.\n" +
-           "Also consider disabling all the overworld worlds do you not wish Wild to function in. \n" +
-           "By default Wild will find and store locations in ALL your overworld worlds\n" +
-           "and most of the time you would only want your players to be using wild in 1 world.\n\n" +
-           "https://github.com/hornta/wild/wiki/Configuration#user-content-disabled_worlds\n" +
-           "If you want to know more you are welcome to ask questions in my Discord support server:\n" +
-           "https://discord.gg/7fz5dvF",
+           "The world `%s` has had more than 50 failed safe locations lookups in a row. Consider disabling this world.",
            event.getWorldUnit().getWorld().getName()
          )
        );

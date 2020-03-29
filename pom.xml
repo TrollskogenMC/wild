@@ -6,7 +6,7 @@
 
     <groupId>com.github.hornta</groupId>
     <artifactId>wild</artifactId>
-    <version>0.15.0</version>
+    <version>0.15.2</version>
 
     <properties>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -54,6 +54,22 @@
                         <relocation>
                             <pattern>com.github.hornta.carbon</pattern>
                             <shadedPattern>com.github.hornta.wild.carbon</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.google.common</pattern>
+                            <shadedPattern>com.github.hornta.com.google.common</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>io.papermc</pattern>
+                            <shadedPattern>com.github.hornta.io.papermc</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>javassist</pattern>
+                            <shadedPattern>com.github.hornta.javassist</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.reflections</pattern>
+                            <shadedPattern>com.github.hornta.org.reflections</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>
