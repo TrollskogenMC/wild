@@ -6,7 +6,7 @@
 
     <groupId>com.github.hornta</groupId>
     <artifactId>wild</artifactId>
-    <version>0.15.2</version>
+    <version>0.16.0</version>
 
     <properties>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -130,6 +130,10 @@
             <id>CodeMC</id>
             <url>https://repo.codemc.org/repository/maven-public</url>
         </repository>
+        <repository>
+            <id>github-towny</id>
+            <url>https://maven.pkg.github.com/TownyAdvanced/Towny</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -167,6 +171,12 @@
             <artifactId>paperlib</artifactId>
             <version>1.0.2</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.palmergames.bukkit.towny</groupId>
+            <artifactId>Towny</artifactId>
+            <version>0.96.0.4</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

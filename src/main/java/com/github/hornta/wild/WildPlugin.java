@@ -75,6 +75,8 @@ public class WildPlugin extends JavaPlugin {
         .add(ConfigKey.PERF_COMMAND_MAX_TRIES, "performance.command_max_tries", ConfigType.INTEGER, 2)
         .add(ConfigKey.VERBOSE, "verbose", ConfigType.BOOLEAN, false)
         .add(ConfigKey.DROP_FROM_ABOVE_HEIGHT, "drop_from_above_height", ConfigType.INTEGER, 0)
+        .add(ConfigKey.TOWNY_ENABLED, "towny.enabled", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.TOWNY_ALLOW_WILD_TO_TOWN, "towny.allow_wild_to_town", ConfigType.BOOLEAN, false)
         .build();
     } catch (Exception e) {
       setEnabled(false);

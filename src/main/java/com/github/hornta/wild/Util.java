@@ -1,6 +1,7 @@
 package com.github.hornta.wild;
 
 import com.github.hornta.carbon.message.MessageManager;
+import com.palmergames.bukkit.towny.TownyAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -8,6 +9,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -171,6 +173,28 @@ public class Util {
 
     if(!isSafeAbove) {
       throw new Exception(String.format("Above block %s is not safe", above.name()));
+    }
+
+    isTownyOK(block);
+  }
+
+  private static void isTownyOK(Block block) throws Exception {
+    if(WildPlugin.getInstance().getConfiguration().get(ConfigKey.TOWNY_ENABLED)) {
+      Boolean allowWildToTown = WildPlugin.getInstance().getConfiguration().get(ConfigKey.TOWNY_ALLOW_WILD_TO_TOWN);
+      if (allowWildToTown) {
+        return;
+      }
+
+      Plugin townyPlugin = Bukkit.getServer().getPluginManager().getPlugin("Towny");
+      if (townyPlugin == null) {
+        return;
+      }
+
+      TownyAPI townyApi = TownyAPI.getInstance();
+      if (!townyApi.isWilderness(block.getLocation())) {
+        String townName = townyApi.getTownBlock(block.getLocation()).getTown().getName();
+        throw new Exception(String.format("Block %s is inside town %s", block.getType().name(), townName));
+      }
     }
   }
 
