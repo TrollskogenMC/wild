@@ -1,7 +1,12 @@
 package com.github.hornta.wild;
 
 import com.github.hornta.carbon.message.MessageManager;
+import com.massivecraft.factions.Board;
+import com.massivecraft.factions.FLocation;
+import com.massivecraft.factions.Faction;
 import com.palmergames.bukkit.towny.TownyAPI;
+import me.angeschossen.lands.api.integration.LandsIntegration;
+import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -176,24 +181,118 @@ public class Util {
     }
 
     isTownyOK(block);
+    isSaberFactions(block);
+    isFactionsUuidOK(block);
+    isGriefPreventionOK(block);
+    isLandsOK(block);
   }
 
   private static void isTownyOK(Block block) throws Exception {
-    if(WildPlugin.getInstance().getConfiguration().get(ConfigKey.TOWNY_ENABLED)) {
-      Boolean allowWildToTown = WildPlugin.getInstance().getConfiguration().get(ConfigKey.TOWNY_ALLOW_WILD_TO_TOWN);
-      if (allowWildToTown) {
+    if(WildPlugin.getInstance().getConfiguration().get(ConfigKey.CLAIMS_TOWNY_ENABLED)) {
+      boolean allowWild = WildPlugin.getInstance().getConfiguration().get(ConfigKey.CLAIMS_TOWNY_ALLOW_WILD_TO_TOWN);
+
+      if (allowWild) {
         return;
       }
 
-      Plugin townyPlugin = Bukkit.getServer().getPluginManager().getPlugin("Towny");
-      if (townyPlugin == null) {
+      Plugin plugin = Bukkit.getServer().getPluginManager().getPlugin("Towny");
+      if (plugin == null) {
         return;
       }
 
       TownyAPI townyApi = TownyAPI.getInstance();
       if (!townyApi.isWilderness(block.getLocation())) {
-        String townName = townyApi.getTownBlock(block.getLocation()).getTown().getName();
-        throw new Exception(String.format("Block %s is inside town %s", block.getType().name(), townName));
+        throw new Exception(String.format("[Towny] Block %s is inside town", block.getType().name()));
+      }
+    }
+  }
+
+  private static void isSaberFactions(Block block) throws Exception {
+    if(WildPlugin.getInstance().getConfiguration().get(ConfigKey.CLAIMS_SABER_FACTIONS_ENABLED)) {
+      boolean allowWild = WildPlugin.getInstance().getConfiguration().get(ConfigKey.CLAIMS_SABER_FACTIONS_ALLOW_WILD_TO_FACTION);
+      if (allowWild) {
+        return;
+      }
+
+      Plugin plugin = Bukkit.getServer().getPluginManager().getPlugin("Factions");
+      if (plugin == null) {
+        return;
+      }
+
+      FLocation fLocation = new FLocation(block.getLocation());
+      Faction faction = Board.getInstance().getFactionAt(fLocation);
+      if (faction != null && !faction.isWilderness()) {
+        throw new Exception(String.format("[SaberFactions] Block %s is inside faction", block.getType().name()));
+      }
+    }
+  }
+
+  private static void isFactionsUuidOK(Block block) throws Exception {
+    if(WildPlugin.getInstance().getConfiguration().get(ConfigKey.CLAIMS_FACTIONS_UUID_ENABLED)) {
+      boolean allowWild = WildPlugin.getInstance().getConfiguration().get(ConfigKey.CLAIMS_FACTIONS_UUID_ALLOW_WILD_TO_FACTION);
+      if (allowWild) {
+        return;
+      }
+
+      Plugin plugin = Bukkit.getServer().getPluginManager().getPlugin("Factions");
+      if (plugin == null) {
+        return;
+      }
+
+      FLocation fLocation = new FLocation(block.getLocation());
+      Faction faction = Board.getInstance().getFactionAt(fLocation);
+      if (faction != null && !faction.isWilderness()) {
+        throw new Exception(String.format("[Factions UUID] Block %s is inside faction", block.getType().name()));
+      }
+    }
+  }
+
+  private static void isGriefPreventionOK(Block block) throws Exception {
+    if(WildPlugin.getInstance().getConfiguration().get(ConfigKey.CLAIMS_GRIEF_PREVENTION_ENABLED)) {
+      boolean allowWild = WildPlugin.getInstance().getConfiguration().get(ConfigKey.CLAIMS_GRIEF_PREVENTION_ALLOW_WILD_TO_CLAIM);
+      if (allowWild) {
+        return;
+      }
+
+      Plugin plugin = Bukkit.getServer().getPluginManager().getPlugin("GriefPrevention");
+      if (plugin == null) {
+        return;
+      }
+
+      if (
+        GriefPrevention.instance != null &&
+        GriefPrevention.instance.dataStore != null &&
+        GriefPrevention.instance.dataStore.getClaimAt(
+          block.getLocation(),
+          false,
+          null
+        ) != null
+      ) {
+        throw new Exception(String.format("[GriefPrevention] Block %s is inside claim", block.getType().name()));
+      }
+    }
+  }
+
+  private static LandsIntegration landsIntegration;
+
+  private static void isLandsOK(Block block) throws Exception {
+    if(WildPlugin.getInstance().getConfiguration().get(ConfigKey.CLAIMS_LANDS_ENABLED)) {
+      boolean allowWild = WildPlugin.getInstance().getConfiguration().get(ConfigKey.CLAIMS_LANDS_ALLOW_WILD_TO_CLAIM);
+      if (allowWild) {
+        return;
+      }
+
+      Plugin plugin = Bukkit.getServer().getPluginManager().getPlugin("Lands");
+      if (plugin == null) {
+        return;
+      }
+
+      if (landsIntegration == null) {
+        landsIntegration = new LandsIntegration(WildPlugin.getInstance(), false);
+      }
+
+      if (landsIntegration.isClaimed(block.getLocation())) {
+        throw new Exception(String.format("[GriefPrevention] Block %s is inside claim", block.getType().name()));
       }
     }
   }

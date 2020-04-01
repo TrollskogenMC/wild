@@ -75,8 +75,16 @@ public class WildPlugin extends JavaPlugin {
         .add(ConfigKey.PERF_COMMAND_MAX_TRIES, "performance.command_max_tries", ConfigType.INTEGER, 2)
         .add(ConfigKey.VERBOSE, "verbose", ConfigType.BOOLEAN, false)
         .add(ConfigKey.DROP_FROM_ABOVE_HEIGHT, "drop_from_above_height", ConfigType.INTEGER, 0)
-        .add(ConfigKey.TOWNY_ENABLED, "towny.enabled", ConfigType.BOOLEAN, false)
-        .add(ConfigKey.TOWNY_ALLOW_WILD_TO_TOWN, "towny.allow_wild_to_town", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.CLAIMS_TOWNY_ENABLED, "claims.towny.enabled", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.CLAIMS_TOWNY_ALLOW_WILD_TO_TOWN, "claims.towny.allow_wild_to_town", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.CLAIMS_SABER_FACTIONS_ENABLED, "claims.saber_factions.enabled", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.CLAIMS_SABER_FACTIONS_ALLOW_WILD_TO_FACTION, "claims.saber_factions.allow_wild_to_faction", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.CLAIMS_GRIEF_PREVENTION_ENABLED, "claims.grief_prevention.enabled", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.CLAIMS_GRIEF_PREVENTION_ALLOW_WILD_TO_CLAIM, "claims.grief_prevention.allow_wild_to_claim", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.CLAIMS_FACTIONS_UUID_ENABLED, "claims.factions_uuid.enabled", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.CLAIMS_FACTIONS_UUID_ALLOW_WILD_TO_FACTION, "claims.factions_uuid.allow_wild_to_faction", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.CLAIMS_LANDS_ENABLED, "claims.lands.enabled", ConfigType.BOOLEAN, false)
+        .add(ConfigKey.CLAIMS_LANDS_ALLOW_WILD_TO_CLAIM, "claims.lands.allow_wild_to_claim", ConfigType.BOOLEAN, false)
         .build();
     } catch (Exception e) {
       setEnabled(false);

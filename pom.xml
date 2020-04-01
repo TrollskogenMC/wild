@@ -178,5 +178,22 @@
             <version>0.96.0.4</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.massivecraft</groupId>
+            <artifactId>Factions</artifactId>
+            <version>1.6.9.5-2.3.1-RC</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.TechFortress</groupId>
+            <artifactId>GriefPrevention</artifactId>
+            <version>16.13.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.Angeschossen</groupId>
+            <artifactId>LandsAPI</artifactId>
+            <version>4.5.2.0</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>
