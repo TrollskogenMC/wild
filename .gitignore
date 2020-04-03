@@ -1,7 +1,7 @@
 server/*
 server/plugins/*
 !server/paper-*.jar
-server/plugins/LuckPerms-Bukkit-4.4.1.jar
+server/plugins/LuckPerms-Bukkit-5.0.72.jar
 server/plugins/Multiverse-Core-4.0.0.jar
 server/plugins/ProtocolLib.jar
 server/plugins/Vault.jar
