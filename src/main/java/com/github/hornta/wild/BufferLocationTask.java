@@ -9,7 +9,6 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.util.Vector;
 
 import java.util.*;
 
@@ -27,7 +26,7 @@ public class BufferLocationTask extends BukkitRunnable {
     Optional<WorldUnit> worldUnit = wildManager
       .getWorldUnits()
       .stream()
-      .min(Comparator.comparingInt((WorldUnit wu) -> wu.getLookups()));
+      .min(Comparator.comparingInt(WorldUnit::getLookups));
 
     if(!worldUnit.isPresent()) {
       WildPlugin.debug("Didn't find any suitable world.");
@@ -43,41 +42,13 @@ public class BufferLocationTask extends BukkitRunnable {
 
     World world = worldUnit.get().getWorld();
     LookupData lookup = worldUnit.get().getLookupData();
-
-    double randX;
-    double randZ;
-
-    Location loc;
-    if (lookup.isRound()) {
-      double a = random.nextDouble() * 2 * Math.PI;
-      double r = Math.min(lookup.getRadiusX(), lookup.getRadiusZ()) * Math.sqrt(random.nextDouble());
-      randX = r * Math.cos(a) + lookup.getCenterX();
-      randZ = r * Math.sin(a) + lookup.getCenterZ();
-    } else {
-      randX = Util.randInt(
-        lookup.getCenterX() - lookup.getRadiusX() + 1,
-        lookup.getCenterX() + lookup.getRadiusX() - 1
-      );
-      randZ = Util.randInt(
-        lookup.getCenterZ() - lookup.getRadiusZ() + 1,
-        lookup.getCenterZ() + lookup.getRadiusZ() - 1
-      );
-    }
-
-    loc = new Location(world, (int) randX, 0, (int) randZ).add(new Vector(0.5, 0, 0.5));
+    Location loc = lookup.getRandomLocation();
 
     PaperLib.getChunkAtAsync(loc).thenAccept((Chunk c) -> {
       Bukkit.getScheduler().runTaskLater(wildManager.getPlugin(), () -> {
-        int y = world.getHighestBlockYAt((int) randX, (int) randZ);
+        int y = world.getHighestBlockYAt(loc.getBlockX(), loc.getBlockZ());
         loc.setY(y);
         WildPlugin.debug("Found block %s at %s", loc.getBlock().getType().name(), loc);
-
-        if (lookup.getWbBorderData() != null && !lookup.getWbBorderData().insideBorder(loc)) {
-          UnsafeLocationFoundEvent event = new UnsafeLocationFoundEvent(worldUnit.get());
-          Bukkit.getPluginManager().callEvent(event);
-          WildPlugin.debug("Block is outside of WorldBorder border");
-          return;
-        }
 
         try {
           Util.isSafeStandBlock(loc.getBlock());

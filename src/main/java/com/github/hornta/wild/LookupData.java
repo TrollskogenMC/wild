@@ -1,89 +1,122 @@
 package com.github.hornta.wild;
 
 import com.wimbli.WorldBorder.BorderData;
-import com.wimbli.WorldBorder.Config;
+import com.wimbli.WorldBorder.WorldBorder;
+import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.util.Vector;
+
+import java.util.Random;
 
 public class LookupData {
-  private boolean isRound;
-  private BorderData wbBorderData;
-  private int centerX;
-  private int centerZ;
-  private int radiusX;
-  private int radiusZ;
+  private final World world;
+  private final boolean isRound;
+  private final int centerX;
+  private final int centerZ;
+  private final int radiusX;
+  private final int radiusZ;
+  private final Random random;
 
-  public LookupData(boolean isRound, BorderData wbBorderData, int centerX, int centerZ, int radiusX, int radiusZ) {
+  public LookupData(World world, boolean isRound, int centerX, int centerZ, int radiusX, int radiusZ) {
+    this.world = world;
     this.isRound = isRound;
-    this.wbBorderData = wbBorderData;
     this.centerX = centerX;
     this.centerZ = centerZ;
     this.radiusX = radiusX;
     this.radiusZ = radiusZ;
+    this.random = new Random();
   }
 
-  public boolean isRound() {
-    return isRound;
-  }
+  public Location getRandomLocation() {
+    double randX;
+    double randZ;
 
-  public BorderData getWbBorderData() {
-    return wbBorderData;
-  }
+    int cx = centerX;
+    int cz = centerZ;
+    int rx = radiusX;
+    int rz = radiusZ;
+    boolean checkRound = isRound;
 
-  public int getCenterX() {
-    return centerX;
-  }
+    if(WildPlugin.getInstance().getWorldBorder() != null) {
+      BorderData worldBorder = WildPlugin.getInstance().getWorldBorder().getWorldBorder(world.getName());
+      if(worldBorder != null) {
+        boolean isRound;
 
-  public int getCenterZ() {
-    return centerZ;
-  }
+        if(worldBorder.getShape() == null) {
+          // the default border in WorldBorder plugin is round
+          isRound = true;
+        } else {
+          isRound = worldBorder.getShape();
+        }
 
-  public int getRadiusZ() {
-    return radiusZ;
-  }
+        boolean worldBorderContains =
+          (
+            isRound &&
+            worldBorder.getRadiusX() <= radiusX &&
+            worldBorder.getRadiusZ() <= radiusZ
+          ) ||
+          (
+            !isRound &&
+            worldBorder.getX() - worldBorder.getRadiusX() >= radiusX &&
+            worldBorder.getX() + worldBorder.getRadiusX() <= radiusX &&
+            worldBorder.getZ() - worldBorder.getRadiusZ() >= radiusZ &&
+            worldBorder.getZ() + worldBorder.getRadiusZ() <= radiusZ
+          );
 
-  public int getRadiusX() {
-    return radiusX;
+        // if the WorldBorder border fits within the lookup area, then find location inside
+        // to prevent locations found outside the border which is still guarded for
+        if (worldBorderContains) {
+          checkRound = isRound;
+          cx = (int)worldBorder.getX();
+          cz = (int)worldBorder.getZ();
+          rx = worldBorder.getRadiusX();
+          rz = worldBorder.getRadiusZ();
+        }
+      }
+    }
+
+    if (checkRound) {
+      double a = random.nextDouble() * 2 * Math.PI;
+      double r = Math.min(rx, rz) * Math.sqrt(random.nextDouble());
+      randX = r * Math.cos(a) + cx;
+      randZ = r * Math.sin(a) + cz;
+    } else {
+      randX = Util.randInt(
+        cx - rx + 1,
+        cx + rx - 1
+      );
+      randZ = Util.randInt(
+        cz - rz + 1,
+        cz + rz - 1
+      );
+    }
+
+    return new Location(
+      world,
+      (int) randX,
+      0,
+      (int) randZ
+    ).add(new Vector(0.5, 0, 0.5));
   }
 
   public static LookupData createLookup(World world) {
-    boolean isRound;
-    BorderData borderData = null;
-    int centerX;
-    int centerZ;
+    boolean isRound = false;
+    int centerX = world.getWorldBorder().getCenter().getBlockX();
+    int centerZ = world.getWorldBorder().getCenter().getBlockZ();
     int radiusX;
     int radiusZ;
 
-    if (WildPlugin.getInstance().getWorldBorder() != null) {
-      borderData = Config.getBorders().getOrDefault(world.getName(), null);
-    }
-
-    if (borderData != null) {
-      centerX = (int) Math.floor(borderData.getX());
-      centerZ = (int) Math.floor(borderData.getZ());
-      radiusX = borderData.getRadiusX();
-      radiusZ = borderData.getRadiusZ();
-      if(borderData.getShape() != null) {
-        isRound = borderData.getShape();
-      } else {
-        isRound = false;
-      }
-    } else if (WildPlugin.getInstance().getConfiguration().get(ConfigKey.USE_VANILLA_WORLD_BORDER)) {
-      centerX = world.getWorldBorder().getCenter().getBlockX();
-      centerZ = world.getWorldBorder().getCenter().getBlockZ();
+    if (WildPlugin.getInstance().getConfiguration().get(ConfigKey.USE_VANILLA_WORLD_BORDER)) {
       radiusX = (int) Math.ceil(world.getWorldBorder().getSize() / 2);
       radiusZ = (int) Math.ceil(world.getWorldBorder().getSize() / 2);
-      isRound = false;
     } else {
-      centerX = world.getSpawnLocation().getBlockX();
-      centerZ = world.getSpawnLocation().getBlockZ();
       radiusX = WildPlugin.getInstance().getConfiguration().get(ConfigKey.NO_BORDER_SIZE);
       radiusZ = WildPlugin.getInstance().getConfiguration().get(ConfigKey.NO_BORDER_SIZE);
-      isRound = false;
     }
 
     return new LookupData(
+      world,
       isRound,
-      borderData,
       centerX,
       centerZ,
       radiusX,

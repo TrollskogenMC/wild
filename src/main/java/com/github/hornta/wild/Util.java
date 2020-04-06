@@ -5,6 +5,8 @@ import com.massivecraft.factions.Board;
 import com.massivecraft.factions.FLocation;
 import com.massivecraft.factions.Faction;
 import com.palmergames.bukkit.towny.TownyAPI;
+import com.wimbli.WorldBorder.BorderData;
+import com.wimbli.WorldBorder.WorldBorder;
 import me.angeschossen.lands.api.integration.LandsIntegration;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import org.bukkit.Bukkit;
@@ -164,12 +166,23 @@ public class Util {
     Material current = block.getType();
     Material above = block.getRelative(BlockFace.UP).getType();
 
+    WorldBorder worldBorderPlugin = WildPlugin.getInstance().getWorldBorder();
+    if (worldBorderPlugin != null) {
+      String worldName = block.getWorld().getName();
+      BorderData borderData = worldBorderPlugin.getWorldBorder(worldName);
+      if(borderData != null) {
+        if (!borderData.insideBorder(block.getLocation())) {
+          throw new Exception("Is not inside the world border brought by the WorldBorder plugin");
+        }
+      }
+    }
+
     boolean isInsideWorldBorder = block.getWorld().getWorldBorder().isInside(block.getLocation());
     boolean isSafe = !bannedMaterials.contains(current);
     boolean isSafeAbove = !bannedMaterials.contains(above);
 
     if(!isInsideWorldBorder) {
-      throw new Exception("Is not inside the world border");
+      throw new Exception("Is not inside the vanilla world border");
     }
 
     if(!isSafe) {
