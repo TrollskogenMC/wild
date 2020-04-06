@@ -14,56 +14,79 @@ import java.util.*;
 
 public class BufferLocationTask extends BukkitRunnable {
   private final WildManager wildManager;
-  private final Random random;
 
   public BufferLocationTask(WildManager wildManager) {
     this.wildManager = wildManager;
-    this.random = new Random();
   }
 
   @Override
   public void run() {
-    Optional<WorldUnit> worldUnit = wildManager
+    Optional<WorldUnit> optWorldUnit = wildManager
       .getWorldUnits()
       .stream()
       .min(Comparator.comparingInt(WorldUnit::getLookups));
 
-    if(!worldUnit.isPresent()) {
+    if(!optWorldUnit.isPresent()) {
       WildPlugin.debug("Didn't find any suitable world.");
       return;
     }
 
-    if(worldUnit.get().getLocations().size() >= (int)wildManager.getPlugin().getConfiguration().get(ConfigKey.PERF_BUFFER_SIZE)) {
+    WorldUnit worldUnit = optWorldUnit.get();
+    LinkedList<Location> worldUnitLocations = worldUnit.getLocations();
+    int maxStoredLocations = wildManager.getPlugin().getConfiguration().get(ConfigKey.PERF_BUFFER_SIZE);
+    if(worldUnitLocations.size() >= maxStoredLocations) {
       WildPlugin.debug("Reached maximum buffer size");
       return;
     }
 
-    worldUnit.get().increaseLookups();
+    World world = worldUnit.getWorld();
 
-    World world = worldUnit.get().getWorld();
-    LookupData lookup = worldUnit.get().getLookupData();
+    worldUnit.increaseLookups();
+    LookupData lookup = worldUnit.getLookupData();
     Location loc = lookup.getRandomLocation();
 
     PaperLib.getChunkAtAsync(loc).thenAccept((Chunk c) -> {
       Bukkit.getScheduler().runTaskLater(wildManager.getPlugin(), () -> {
+
+        // we need to check if the world still exists in the engine
+        // because it could have been removed after we received it
+        // because we are inside async methods
+        if (!wildManager.containsWorldUnit(worldUnit)) {
+          WildPlugin.debug("World %s was removed.", world.getName());
+          return;
+        }
+
         int y = world.getHighestBlockYAt(loc.getBlockX(), loc.getBlockZ());
         loc.setY(y);
-        WildPlugin.debug("Found block %s at %s", loc.getBlock().getType().name(), loc);
+        WildPlugin.debug(
+          "Found block %s at %s",
+          loc.getBlock().getType().name(),
+          loc
+        );
 
         try {
           Util.isSafeStandBlock(loc.getBlock());
         } catch (Exception e) {
-          WildPlugin.debug("Block %s at %s is not safe to stand on. Reason: %s", loc.getBlock().getType().name(), loc.getBlock().getLocation(), e.getMessage());
-          UnsafeLocationFoundEvent event = new UnsafeLocationFoundEvent(worldUnit.get());
+          WildPlugin.debug(
+            "Block %s at %s is not safe to stand on. Reason: %s",
+            loc.getBlock().getType().name(),
+            loc.getBlock().getLocation(),
+            e.getMessage()
+          );
+          UnsafeLocationFoundEvent event = new UnsafeLocationFoundEvent(worldUnit);
           Bukkit.getPluginManager().callEvent(event);
           return;
         }
 
         Location finalLocation = Util.findSpaceBelow(loc);
-        WildPlugin.debug("Save block %s at %s", finalLocation.getBlock().getType().name(), finalLocation);
+        WildPlugin.debug(
+          "Save block %s at %s",
+          finalLocation.getBlock().getType().name(),
+          finalLocation
+        );
         finalLocation.add(0, 1, 0);
-        worldUnit.get().getLocations().offer(finalLocation);
-        worldUnit.get().resetUnsafeLookups();
+        worldUnitLocations.add(finalLocation);
+        worldUnit.resetUnsafeLookups();
         BufferedLocationEvent event = new BufferedLocationEvent(finalLocation);
         Bukkit.getPluginManager().callEvent(event);
       }, 0);

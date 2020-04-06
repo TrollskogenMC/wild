@@ -63,6 +63,7 @@ public class WildManager implements Listener {
     worldUnits.removeIf((WorldUnit worldUnit) -> event.getWorld() == worldUnit.getWorld());
     worldUnitsByWorld.remove(event.getWorld());
     currentlyLooking.removeIf((PlayerSearch search) -> search.getWorld().equals(event.getWorld()));
+    WildPlugin.debug("Unloaded world %s.", event.getWorld().getName());
   }
 
   @EventHandler
@@ -251,12 +252,14 @@ public class WildManager implements Listener {
 
   private void acceptWorld(World world) {
     if(world.getEnvironment() != World.Environment.NORMAL) {
+      WildPlugin.debug("Failed to accept world %s. World type is not NORMAL", world.getName());
       return;
     }
 
     List<String> disabledWorlds = WildPlugin.getInstance().getConfiguration().get(ConfigKey.DISABLED_WORLDS);
     for(String worldName : disabledWorlds) {
       if(worldName.equalsIgnoreCase(world.getName())) {
+        WildPlugin.debug("Failed to accept world %s. World is disabled.", worldName);
         return;
       }
     }
@@ -270,6 +273,10 @@ public class WildManager implements Listener {
 
   public List<WorldUnit> getWorldUnits() {
     return worldUnits;
+  }
+
+  public boolean containsWorldUnit(WorldUnit worldUnit) {
+    return worldUnitsByWorld.containsValue(worldUnit);
   }
 
   public WorldUnit getWorldUnitByWorld(World world) {
