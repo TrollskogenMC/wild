@@ -21,24 +21,20 @@ public class BufferLocationTask extends BukkitRunnable {
 
   @Override
   public void run() {
+    int maxStoredLocations = wildManager.getPlugin().getConfiguration().get(ConfigKey.PERF_BUFFER_SIZE);
+
     Optional<WorldUnit> optWorldUnit = wildManager
       .getWorldUnits()
       .stream()
+      .filter((WorldUnit w) -> !(w.getLocations().size() >= maxStoredLocations))
       .min(Comparator.comparingInt(WorldUnit::getLookups));
 
     if(!optWorldUnit.isPresent()) {
-      WildPlugin.debug("Didn't find any suitable world.");
+      WildPlugin.debug("No more worlds to find locations in.");
       return;
     }
 
     WorldUnit worldUnit = optWorldUnit.get();
-    LinkedList<Location> worldUnitLocations = worldUnit.getLocations();
-    int maxStoredLocations = wildManager.getPlugin().getConfiguration().get(ConfigKey.PERF_BUFFER_SIZE);
-    if(worldUnitLocations.size() >= maxStoredLocations) {
-      WildPlugin.debug("Reached maximum buffer size");
-      return;
-    }
-
     World world = worldUnit.getWorld();
 
     worldUnit.increaseLookups();
@@ -85,7 +81,7 @@ public class BufferLocationTask extends BukkitRunnable {
           finalLocation
         );
         finalLocation.add(0, 1, 0);
-        worldUnitLocations.add(finalLocation);
+        worldUnit.getLocations().add(finalLocation);
         worldUnit.resetUnsafeLookups();
         BufferedLocationEvent event = new BufferedLocationEvent(finalLocation);
         Bukkit.getPluginManager().callEvent(event);
