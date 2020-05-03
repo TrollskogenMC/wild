@@ -1,14 +1,23 @@
 package com.github.hornta.wild;
 
-import com.github.hornta.carbon.*;
-import com.github.hornta.carbon.config.ConfigType;
-import com.github.hornta.carbon.config.Configuration;
-import com.github.hornta.carbon.config.ConfigurationBuilder;
-import com.github.hornta.carbon.message.*;
+import com.github.hornta.commando.CarbonArgument;
+import com.github.hornta.commando.CarbonArgumentType;
+import com.github.hornta.commando.CarbonCommand;
+import com.github.hornta.commando.Commando;
+import com.github.hornta.commando.ICarbonArgument;
+import com.github.hornta.commando.ValidationResult;
+import com.github.hornta.messenger.MessageManager;
+import com.github.hornta.messenger.MessagesBuilder;
+import com.github.hornta.messenger.Translation;
+import com.github.hornta.messenger.Translations;
+import com.github.hornta.versioned_config.Configuration;
+import com.github.hornta.versioned_config.ConfigurationBuilder;
 import com.github.hornta.wild.commands.CommandInfo;
 import com.github.hornta.wild.commands.CommandInfoLoaded;
 import com.github.hornta.wild.commands.CommandWild;
 import com.github.hornta.wild.commands.CommandReload;
+import com.github.hornta.wild.config.ConfigKey;
+import com.github.hornta.wild.config.InitialVersion;
 import com.github.hornta.wild.engine.WildManager;
 import com.wimbli.WorldBorder.WorldBorder;
 import net.milkbowl.vault.economy.Economy;
@@ -21,7 +30,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Collections;
+import java.io.File;
 import java.util.IllegalFormatConversionException;
 import java.util.List;
 import java.util.logging.Level;
@@ -29,8 +38,8 @@ import java.util.logging.Level;
 public class WildPlugin extends JavaPlugin {
   private static WildPlugin instance;
   private WorldBorder worldBorder;
-  private Carbon carbon;
-  private Configuration configuration;
+  private Commando commando;
+  private Configuration<ConfigKey> configuration;
   private Translations translations;
   private Economy economy;
   private WildManager wildManager;
@@ -44,7 +53,7 @@ public class WildPlugin extends JavaPlugin {
       instance = this;
     }
 
-    new Metrics(this);
+    new Metrics(this, 7399);
 
     if (Bukkit.getPluginManager().isPluginEnabled("Vault")) {
       RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
@@ -54,46 +63,98 @@ public class WildPlugin extends JavaPlugin {
     }
     worldBorder = (WorldBorder) Bukkit.getPluginManager().getPlugin("WorldBorder");
 
-    try {
-      configuration = new ConfigurationBuilder(this)
-        .add(ConfigKey.LANGUAGE, "language", ConfigType.STRING, "english")
-        .add(ConfigKey.COOLDOWN, "cooldown", ConfigType.INTEGER, 60)
-        .add(ConfigKey.NO_BORDER_SIZE, "no_border_size", ConfigType.INTEGER, 5000)
-        .add(ConfigKey.USE_VANILLA_WORLD_BORDER, "use_vanilla_world_border", ConfigType.BOOLEAN, false)
-        .add(ConfigKey.IMMORTAL_DURATION_AFTER_TELEPORT, "immortal_duration_after_teleport", ConfigType.INTEGER, 5000)
-        .add(ConfigKey.CHARGE_ENABLED, "charge.enabled", ConfigType.BOOLEAN, false)
-        .add(ConfigKey.CHARGE_AMOUNT, "charge.amount", ConfigType.DOUBLE, 10)
-        .add(ConfigKey.DISABLED_WORLDS, "disabled_worlds", ConfigType.LIST, Collections.emptyList())
-        .add(ConfigKey.WILD_ON_FIRST_JOIN_ENABLED, "wild_on_first_join.enabled", ConfigType.BOOLEAN, false)
-        .add(ConfigKey.WILD_ON_FIRST_JOIN_WORLD, "wild_on_first_join.world", ConfigType.STRING, "@same")
-        .add(ConfigKey.WILD_ON_DEATH_ENABLED, "wild_on_death.enabled", ConfigType.BOOLEAN, false)
-        .add(ConfigKey.WILD_ON_DEATH_WORLD, "wild_on_death.world", ConfigType.STRING, "@same")
-        .add(ConfigKey.WILD_DEFAULT_WORLD, "default_world", ConfigType.STRING, "@same")
-        .add(ConfigKey.PERF_BUFFER_SIZE, "performance.buffer_size", ConfigType.INTEGER, 256)
-        .add(ConfigKey.PERF_BUFFER_INTERVAL, "performance.buffer_interval", ConfigType.INTEGER, 20 * 2)
-        .add(ConfigKey.PERF_KEEP_BUFFER_LOADED, "performance.keep_buffer_loaded_size", ConfigType.INTEGER, 3)
-        .add(ConfigKey.PERF_COMMAND_MAX_TRIES, "performance.command_max_tries", ConfigType.INTEGER, 2)
-        .add(ConfigKey.VERBOSE, "verbose", ConfigType.BOOLEAN, false)
-        .add(ConfigKey.DROP_FROM_ABOVE_HEIGHT, "drop_from_above_height", ConfigType.INTEGER, 0)
-        .add(ConfigKey.CLAIMS_TOWNY_ENABLED, "claims.towny.enabled", ConfigType.BOOLEAN, false)
-        .add(ConfigKey.CLAIMS_TOWNY_ALLOW_WILD_TO_TOWN, "claims.towny.allow_wild_to_town", ConfigType.BOOLEAN, false)
-        .add(ConfigKey.CLAIMS_SABER_FACTIONS_ENABLED, "claims.saber_factions.enabled", ConfigType.BOOLEAN, false)
-        .add(ConfigKey.CLAIMS_SABER_FACTIONS_ALLOW_WILD_TO_FACTION, "claims.saber_factions.allow_wild_to_faction", ConfigType.BOOLEAN, false)
-        .add(ConfigKey.CLAIMS_GRIEF_PREVENTION_ENABLED, "claims.grief_prevention.enabled", ConfigType.BOOLEAN, false)
-        .add(ConfigKey.CLAIMS_GRIEF_PREVENTION_ALLOW_WILD_TO_CLAIM, "claims.grief_prevention.allow_wild_to_claim", ConfigType.BOOLEAN, false)
-        .add(ConfigKey.CLAIMS_FACTIONS_UUID_ENABLED, "claims.factions_uuid.enabled", ConfigType.BOOLEAN, false)
-        .add(ConfigKey.CLAIMS_FACTIONS_UUID_ALLOW_WILD_TO_FACTION, "claims.factions_uuid.allow_wild_to_faction", ConfigType.BOOLEAN, false)
-        .add(ConfigKey.CLAIMS_LANDS_ENABLED, "claims.lands.enabled", ConfigType.BOOLEAN, false)
-        .add(ConfigKey.CLAIMS_LANDS_ALLOW_WILD_TO_CLAIM, "claims.lands.allow_wild_to_claim", ConfigType.BOOLEAN, false)
-        .build();
-    } catch (Exception e) {
-      setEnabled(false);
-      getLogger().log(Level.SEVERE, e.getMessage(), e);
-    }
+    setupConfig();
+    setupMessages();
+    wildManager = new WildManager(this);
+    getServer().getPluginManager().registerEvents(wildManager, this);
+    setupCommands();
+  }
 
+  @Override
+  public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    return commando.handleCommand(sender, command, args);
+  }
+
+  @Override
+  public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+    return commando.handleAutoComplete(sender, command, args);
+  }
+
+  private void setupConfig() {
+    File cfgFile = new File(getDataFolder(), "config.yml");
+    ConfigurationBuilder<ConfigKey> cb = new ConfigurationBuilder<>(this, cfgFile);
+    cb.addVersion(new InitialVersion());
+    configuration = cb.run();
+  }
+
+  private void setupCommands() {
+    commando = new Commando();
+    commando.setNoPermissionHandler((CommandSender sender, CarbonCommand command) -> {
+      MessageManager.sendMessage(sender, MessageKey.NO_PERMISSION);
+    });
+    commando.setMissingArgumentHandler((CommandSender sender, CarbonCommand command) -> {
+      MessageManager.setValue("usage", command.getHelpText());
+      MessageManager.sendMessage(sender, MessageKey.MISSING_ARGUMENTS);
+    });
+
+    commando.handleValidation((ValidationResult result) -> {
+      switch (result.getStatus()) {
+        case ERR_OTHER:
+          if (result.getArgument().getType() == CarbonArgumentType.WORLD_NORMAL) {
+            MessageManager.setValue("world", result.getValue());
+            MessageManager.sendMessage(result.getCommandSender(), MessageKey.WORLD_NOT_FOUND);
+          } else if(result.getArgument().getType() == CarbonArgumentType.ONLINE_PLAYER) {
+            MessageManager.setValue("player", result.getValue());
+            MessageManager.sendMessage(result.getCommandSender(), MessageKey.PLAYER_NOT_FOUND);
+          }
+          break;
+      }
+    });
+
+    ICarbonArgument playerArg =
+      new CarbonArgument.Builder("player")
+        .setType(CarbonArgumentType.ONLINE_PLAYER)
+        .setDefaultValue(Player.class, (CommandSender sender, String[] prevArgs) -> sender.getName())
+        .requiresPermission("wild.player")
+        .create();
+    ICarbonArgument worldArg =
+      new CarbonArgument.Builder("world")
+        .setType(CarbonArgumentType.WORLD_NORMAL)
+        .dependsOn(playerArg)
+        .setDefaultValue(Player.class, (CommandSender sender, String[] prevArgs) -> ((Player) sender).getWorld().getName())
+        .setDefaultValue(ConsoleCommandSender.class, (CommandSender sender, String[] prevArgs) -> {
+          Player player = Bukkit.getPlayer(prevArgs[0]);
+          return player.getWorld().getName();
+        })
+        .requiresPermission("wild.world")
+        .create();
+
+    commando
+      .addCommand("wild")
+      .withArgument(playerArg)
+      .withArgument(worldArg)
+      .withHandler(new CommandWild(wildManager))
+      .requiresPermission("wild.wild");
+
+    commando
+      .addCommand("wild reload")
+      .withHandler(new CommandReload())
+      .requiresPermission("wild.reload");
+
+    commando
+      .addCommand("wild info")
+      .withHandler(new CommandInfo())
+      .requiresPermission("wild.info");
+
+    commando
+      .addCommand("wild info loaded")
+      .withHandler(new CommandInfoLoaded())
+      .requiresPermission("wild.info.loaded");
+  }
+
+  private void setupMessages() {
     MessageManager messageManager = new MessagesBuilder()
       .add(MessageKey.CONFIGURATION_RELOADED, "reloaded_ok")
-      .add(MessageKey.CONFIGURATION_RELOAD_FAILED, "reloaded_fail")
       .add(MessageKey.WILD_NOT_FOUND, "wild_not_found")
       .add(MessageKey.COOLDOWN, "cooldown")
       .add(MessageKey.CHARGE, "charge")
@@ -124,91 +185,14 @@ public class WildPlugin extends JavaPlugin {
 
     translations = new Translations(this, messageManager);
     Translation translation = translations.createTranslation(configuration.get(ConfigKey.LANGUAGE));
-    Translation fallbackTranslation = translations.createTranslation("english");
-    messageManager.setTranslation(translation, fallbackTranslation);
-
-    wildManager = new WildManager(this);
-    getServer().getPluginManager().registerEvents(wildManager, this);
-
-    carbon = new Carbon();
-    carbon.setNoPermissionHandler((CommandSender sender, CarbonCommand command) -> {
-      MessageManager.sendMessage(sender, MessageKey.NO_PERMISSION);
-    });
-    carbon.setMissingArgumentHandler((CommandSender sender, CarbonCommand command) -> {
-      MessageManager.setValue("usage", command.getHelpText());
-      MessageManager.sendMessage(sender, MessageKey.MISSING_ARGUMENTS);
-    });
-
-    carbon.handleValidation((ValidationResult result) -> {
-      switch (result.getStatus()) {
-        case ERR_OTHER:
-          if (result.getArgument().getType() == CarbonArgumentType.WORLD_NORMAL) {
-            MessageManager.setValue("world", result.getValue());
-            MessageManager.sendMessage(result.getCommandSender(), MessageKey.WORLD_NOT_FOUND);
-          } else if(result.getArgument().getType() == CarbonArgumentType.ONLINE_PLAYER) {
-            MessageManager.setValue("player", result.getValue());
-            MessageManager.sendMessage(result.getCommandSender(), MessageKey.PLAYER_NOT_FOUND);
-          }
-          break;
-      }
-    });
-
-    CarbonArgument playerArg =
-      new CarbonArgument.Builder("player")
-        .setType(CarbonArgumentType.ONLINE_PLAYER)
-        .setDefaultValue(Player.class, (CommandSender sender, String[] prevArgs) -> sender.getName())
-        .requiresPermission("wild.player")
-        .create();
-    CarbonArgument worldArg =
-      new CarbonArgument.Builder("world")
-        .setType(CarbonArgumentType.WORLD_NORMAL)
-        .dependsOn(playerArg)
-        .setDefaultValue(Player.class, (CommandSender sender, String[] prevArgs) -> ((Player) sender).getWorld().getName())
-        .setDefaultValue(ConsoleCommandSender.class, (CommandSender sender, String[] prevArgs) -> {
-          Player player = Bukkit.getPlayer(prevArgs[0]);
-          return player.getWorld().getName();
-        })
-        .requiresPermission("wild.world")
-        .create();
-
-    carbon
-      .addCommand("wild")
-      .withArgument(playerArg)
-      .withArgument(worldArg)
-      .withHandler(new CommandWild(wildManager))
-      .requiresPermission("wild.wild");
-
-    carbon
-      .addCommand("wild reload")
-      .withHandler(new CommandReload())
-      .requiresPermission("wild.reload");
-
-    carbon
-      .addCommand("wild info")
-      .withHandler(new CommandInfo())
-      .requiresPermission("wild.info");
-
-    carbon
-      .addCommand("wild info loaded")
-      .withHandler(new CommandInfoLoaded())
-      .requiresPermission("wild.info.loaded");
-  }
-
-  @Override
-  public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    return carbon.handleCommand(sender, command, args);
-  }
-
-  @Override
-  public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-    return carbon.handleAutoComplete(sender, command, args);
+    messageManager.setTranslation(translation);
   }
 
   public WorldBorder getWorldBorder() {
     return worldBorder;
   }
 
-  public Configuration getConfiguration() {
+  public Configuration<ConfigKey> getConfiguration() {
     return configuration;
   }
 

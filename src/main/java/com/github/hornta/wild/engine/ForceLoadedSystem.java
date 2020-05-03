@@ -1,6 +1,6 @@
 package com.github.hornta.wild.engine;
 
-import com.github.hornta.wild.ConfigKey;
+import com.github.hornta.wild.config.ConfigKey;
 import com.github.hornta.wild.WildPlugin;
 import com.github.hornta.wild.WorldUnit;
 import com.github.hornta.wild.events.BufferedLocationEvent;
@@ -16,10 +16,10 @@ import org.bukkit.event.Listener;
 import java.util.*;
 
 public class ForceLoadedSystem implements Listener {
-  private WildPlugin wildPlugin;
-  private WildManager wildManager;
+  private final WildPlugin wildPlugin;
+  private final WildManager wildManager;
   private int maxNumKeepLoaded;
-  private HashMap<Chunk, Set<Location>> ticketsByChunk;
+  private final HashMap<Chunk, Set<Location>> ticketsByChunk;
 
   ForceLoadedSystem(WildPlugin wildPlugin, WildManager wildManager) {
     this.wildPlugin = wildPlugin;

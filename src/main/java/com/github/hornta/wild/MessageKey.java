@@ -2,7 +2,6 @@ package com.github.hornta.wild;
 
 public enum MessageKey {
   CONFIGURATION_RELOADED,
-  CONFIGURATION_RELOAD_FAILED,
   WILD_NOT_FOUND,
   COOLDOWN,
   CHARGE,

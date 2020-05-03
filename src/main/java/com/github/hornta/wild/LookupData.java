@@ -1,7 +1,7 @@
 package com.github.hornta.wild;
 
+import com.github.hornta.wild.config.ConfigKey;
 import com.wimbli.WorldBorder.BorderData;
-import com.wimbli.WorldBorder.WorldBorder;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.util.Vector;

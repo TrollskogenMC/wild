@@ -1,7 +1,7 @@
 package com.github.hornta.wild.commands;
 
-import com.github.hornta.carbon.ICommandHandler;
-import com.github.hornta.carbon.message.MessageManager;
+import com.github.hornta.commando.ICommandHandler;
+import com.github.hornta.messenger.MessageManager;
 import com.github.hornta.wild.MessageKey;
 import com.github.hornta.wild.WildPlugin;
 import org.bukkit.Bukkit;

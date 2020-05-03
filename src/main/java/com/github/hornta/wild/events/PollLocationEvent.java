@@ -6,7 +6,7 @@ import org.bukkit.event.HandlerList;
 
 public class PollLocationEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
-  private Location location;
+  private final Location location;
 
   public static HandlerList getHandlerList() {
     return handlers;

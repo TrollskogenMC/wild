@@ -7,9 +7,9 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 public class TeleportEvent extends Event {
-  private Location location;
-  private TeleportCause cause;
-  private Player player;
+  private final Location location;
+  private final TeleportCause cause;
+  private final Player player;
   private static final HandlerList handlers = new HandlerList();
 
   public static HandlerList getHandlerList() {

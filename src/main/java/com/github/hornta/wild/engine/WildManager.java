@@ -1,7 +1,8 @@
 package com.github.hornta.wild.engine;
 
-import com.github.hornta.carbon.message.MessageManager;
+import com.github.hornta.messenger.MessageManager;
 import com.github.hornta.wild.*;
+import com.github.hornta.wild.config.ConfigKey;
 import com.github.hornta.wild.events.*;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -26,15 +27,15 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.*;
 
 public class WildManager implements Listener {
-  private WildPlugin plugin;
-  private List<WorldUnit> worldUnits;
-  private Map<World, WorldUnit> worldUnitsByWorld;
-  private LinkedList<PlayerSearch> currentlyLooking;
-  private Map<UUID, Long> immortals;
-  private HashMap<UUID, Long> playerCooldowns;
+  private final WildPlugin plugin;
+  private final List<WorldUnit> worldUnits;
+  private final Map<World, WorldUnit> worldUnitsByWorld;
+  private final LinkedList<PlayerSearch> currentlyLooking;
+  private final Map<UUID, Long> immortals;
+  private final HashMap<UUID, Long> playerCooldowns;
   private int bufferInterval;
   private BukkitTask bufferTask;
-  private ForceLoadedSystem forceLoadedSystem;
+  private final ForceLoadedSystem forceLoadedSystem;
 
   public WildManager(WildPlugin wildPlugin) {
     this.plugin = wildPlugin;

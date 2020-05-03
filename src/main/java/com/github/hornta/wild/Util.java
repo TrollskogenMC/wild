@@ -1,6 +1,7 @@
 package com.github.hornta.wild;
 
-import com.github.hornta.carbon.message.MessageManager;
+import com.github.hornta.messenger.MessageManager;
+import com.github.hornta.wild.config.ConfigKey;
 import com.massivecraft.factions.Board;
 import com.massivecraft.factions.FLocation;
 import com.massivecraft.factions.Faction;

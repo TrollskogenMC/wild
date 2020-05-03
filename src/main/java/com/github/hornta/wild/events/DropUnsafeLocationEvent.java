@@ -7,8 +7,8 @@ import org.bukkit.event.HandlerList;
 
 public class DropUnsafeLocationEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
-  private PlayerSearch search;
-  private Location location;
+  private final PlayerSearch search;
+  private final Location location;
 
   public static HandlerList getHandlerList() {
     return handlers;

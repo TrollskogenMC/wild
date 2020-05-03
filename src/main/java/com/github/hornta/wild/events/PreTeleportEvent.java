@@ -10,8 +10,8 @@ import org.bukkit.event.HandlerList;
 public class PreTeleportEvent extends Event implements Cancellable {
   private static final HandlerList handlers = new HandlerList();
   private boolean isCancelled;
-  private TeleportCause cause;
-  private Player player;
+  private final TeleportCause cause;
+  private final Player player;
   private Location overrideLocation;
 
   public PreTeleportEvent(TeleportCause cause, Player player) {

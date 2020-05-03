@@ -6,7 +6,7 @@
 
     <groupId>com.github.hornta</groupId>
     <artifactId>wild</artifactId>
-    <version>0.17.3</version>
+    <version>1.0.0</version>
 
     <properties>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -22,6 +22,12 @@
                     <filesets>
                         <fileset>
                             <directory>server/plugins</directory>
+                            <includes>
+                                <include>wild-*.jar</include>
+                            </includes>
+                        </fileset>
+                        <fileset>
+                            <directory>${project.basedir}</directory>
                             <includes>
                                 <include>wild-*.jar</include>
                             </includes>
@@ -49,11 +55,11 @@
                     <relocations>
                         <relocation>
                             <pattern>org.bstats</pattern>
-                            <shadedPattern>com.github.hornta.wild.bstats</shadedPattern>
+                            <shadedPattern>${project.groupId}.wild.bstats</shadedPattern>
                         </relocation>
                         <relocation>
-                            <pattern>com.github.hornta.carbon</pattern>
-                            <shadedPattern>com.github.hornta.wild.carbon</shadedPattern>
+                            <pattern>com.github.hornta.messenger</pattern>
+                            <shadedPattern>${project.groupId}.wild.messenger</shadedPattern>
                         </relocation>
                         <relocation>
                             <pattern>com.google.common</pattern>
@@ -66,10 +72,6 @@
                         <relocation>
                             <pattern>javassist</pattern>
                             <shadedPattern>com.github.hornta.javassist</shadedPattern>
-                        </relocation>
-                        <relocation>
-                            <pattern>org.reflections</pattern>
-                            <shadedPattern>com.github.hornta.org.reflections</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>
@@ -96,6 +98,15 @@
                             <type>jar</type>
                             <overWrite>yes</overWrite>
                             <outputDirectory>${project.basedir}/server/plugins</outputDirectory>
+                            <destFileName>${project.artifactId}-${project.version}.jar</destFileName>
+                        </artifactItem>
+                        <artifactItem>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>${project.artifactId}</artifactId>
+                            <version>${project.version}</version>
+                            <type>jar</type>
+                            <overWrite>yes</overWrite>
+                            <outputDirectory>${project.basedir}</outputDirectory>
                             <destFileName>${project.artifactId}-${project.version}.jar</destFileName>
                         </artifactItem>
                     </artifactItems>
@@ -145,8 +156,18 @@
         </dependency>
         <dependency>
             <groupId>com.github.hornta</groupId>
-            <artifactId>carbon</artifactId>
-            <version>1.5.0-SNAPSHOT</version>
+            <artifactId>commando</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.hornta</groupId>
+            <artifactId>versioned-config</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.hornta</groupId>
+            <artifactId>messenger</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.wimbli.WorldBorder</groupId>
@@ -157,7 +178,7 @@
         <dependency>
             <groupId>org.bstats</groupId>
             <artifactId>bstats-bukkit</artifactId>
-            <version>1.5</version>
+            <version>1.7</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -175,13 +196,13 @@
         <dependency>
             <groupId>com.palmergames.bukkit.towny</groupId>
             <artifactId>Towny</artifactId>
-            <version>0.96.0.4</version>
+            <version>0.96.1.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.massivecraft</groupId>
             <artifactId>Factions</artifactId>
-            <version>1.6.9.5-2.3.1-RC</version>
+            <version>1.6.9.5-2.3.6-RC</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

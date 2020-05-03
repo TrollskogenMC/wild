@@ -6,7 +6,7 @@ import org.bukkit.event.HandlerList;
 
 public class UnsafeLocationFoundEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
-  private WorldUnit worldUnit;
+  private final WorldUnit worldUnit;
 
   public UnsafeLocationFoundEvent(WorldUnit worldUnit) {
     this.worldUnit = worldUnit;

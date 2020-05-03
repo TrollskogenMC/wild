@@ -1,5 +1,6 @@
 package com.github.hornta.wild;
 
+import com.github.hornta.wild.config.ConfigKey;
 import com.github.hornta.wild.engine.WildManager;
 import com.github.hornta.wild.events.BufferedLocationEvent;
 import com.github.hornta.wild.events.UnsafeLocationFoundEvent;

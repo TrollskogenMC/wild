@@ -6,11 +6,11 @@ import org.bukkit.World;
 import java.util.LinkedList;
 
 public class WorldUnit {
-  private World world;
-  private LinkedList<Location> locations;
+  private final World world;
+  private final LinkedList<Location> locations;
   private int lookups;
   private int unsafeLookups;
-  private LookupData lookupData;
+  private final LookupData lookupData;
 
   public WorldUnit(World world) {
     this.world = world;

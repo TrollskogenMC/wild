@@ -7,8 +7,8 @@ import org.bukkit.event.HandlerList;
 
 public class FoundLocationEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
-  private PlayerSearch search;
-  private Location location;
+  private final PlayerSearch search;
+  private final Location location;
   private boolean isCancelled;
 
   public FoundLocationEvent(PlayerSearch search, Location location) {

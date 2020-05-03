@@ -1,12 +1,13 @@
 package com.github.hornta.wild.commands;
 
-import com.github.hornta.carbon.ICommandHandler;
+import com.github.hornta.commando.ICommandHandler;
+import com.github.hornta.messenger.MessageManager;
 import com.github.hornta.wild.*;
+import com.github.hornta.wild.config.ConfigKey;
 import com.github.hornta.wild.engine.WildManager;
 import com.github.hornta.wild.events.RequestLocationEvent;
 import com.github.hornta.wild.events.TeleportEvent;
 import com.github.hornta.wild.events.PreTeleportEvent;
-import com.github.hornta.carbon.message.MessageManager;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.milkbowl.vault.economy.Economy;
@@ -21,7 +22,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import java.util.*;
 
 public class CommandWild implements ICommandHandler, Listener {
-  private WildManager wildManager;
+  private final WildManager wildManager;
 
   public CommandWild(WildManager wildManager) {
     this.wildManager = wildManager;

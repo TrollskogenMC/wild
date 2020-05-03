@@ -6,7 +6,7 @@ import org.bukkit.event.HandlerList;
 
 public class RequestLocationEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
-  private PlayerSearch search;
+  private final PlayerSearch search;
 
   public RequestLocationEvent(PlayerSearch search) {
     this.search = search;
